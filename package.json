@@ -1,0 +1,29 @@
+{
+  "name": "palantiri",
+  "version": "0.0.1",
+  "description": "Monitors health and sends out notifications of unhealthiness throughout the land",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeNow/palantiri.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CodeNow/palantiri/issues"
+  },
+  "homepage": "https://github.com/CodeNow/palantiri#readme",
+  "dependencies": {
+    "101": "^1.0.0",
+    "async": "^1.4.2",
+    "bunyan": "^1.5.0",
+    "bunyan-loggly": "0.0.5",
+    "dockerode": "^2.2.2",
+    "error-cat": "^1.3.4",
+    "loadenv": "^1.1.0",
+    "requestretry": "^1.4.0"
+  }
+}
