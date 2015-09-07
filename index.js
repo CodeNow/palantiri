@@ -1,9 +1,15 @@
+/**
+ * starts palantiri
+ * @module index
+ */
+
 'use strict';
+require('loadenv')();
 
 var domain = require('domain');
 
-var log = require('./lib/logger.js')(__filename).log;
-var rabbitmq = require('./lib/rabbitmq.js');
+var log = require('./lib/external/logger.js')(__filename);
+var rabbitmq = require('./lib/external/rabbitmq.js');
 
 module.exports.start = start;
 
@@ -18,9 +24,18 @@ function start () {
 
   workerDomain.run(function () {
     log.info('palantiri start');
-    setTimeout(function () {
-      rabbitmq.publishHealthCheck();
-    }, process.env.COLLECT_TIME_MS);
+    rabbitmq.connect(function (err) {
+      if (err) {
+        log.fatal({
+          err: err
+        }, 'palantiri error connecting to rabbit');
+        throw err;
+      }
+      rabbitmq.loadWorkers();
+      setInterval(function () {
+        rabbitmq.publishHealthCheck();
+      }, process.env.COLLECT_INTERVAL);
+    });
   });
 }
 
