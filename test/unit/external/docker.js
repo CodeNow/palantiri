@@ -6,9 +6,7 @@ var Lab = require('lab');
 var lab = exports.lab = Lab.script();
 var describe = lab.describe;
 var it = lab.it;
-var after = lab.after;
 var afterEach = lab.afterEach;
-var before = lab.before;
 var beforeEach = lab.beforeEach;
 var Code = require('code');
 var expect = Code.expect;
@@ -16,6 +14,7 @@ var expect = Code.expect;
 var sinon = require('sinon');
 var str = require('string-to-stream');
 var EventEmitter = require('events').EventEmitter
+
 var Docker = require('../../../lib/external/docker.js');
 
 describe('docker.js unit test', function () {
