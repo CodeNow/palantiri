@@ -16,6 +16,7 @@ var hermesClient = require('runnable-hermes');
 var clone = require('101/clone');
 
 var rabbitClient = require('../../../lib/external/rabbitmq.js');
+console.log('XXXX', rabbitClient);
 
 describe('rabbitmq.js unit test', function () {
   describe('connect', function() {
@@ -211,7 +212,7 @@ describe('rabbitmq.js unit test', function () {
         var test = clone(testData);
         delete test[key];
         expect(function () {
-          rabbitClient.hermesClient.publishOnDockUnhealthy(test);
+          rabbitClient.publishOnDockUnhealthy(test);
         }).to.throw();
       });
       done();
