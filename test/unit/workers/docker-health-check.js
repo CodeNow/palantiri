@@ -17,7 +17,6 @@ var clone = require('101/clone');
 var DockerHealthCheck = require('../../../lib/workers/docker-health-check.js');
 var rabbitmq = require('../../../lib/external/rabbitmq.js');
 var monitorDog = require('monitor-dog');
-console.log('XXOUT', rabbitmq);
 
 describe('docker-health-check.js unit test', function () {
   var dockerHealthCheck;

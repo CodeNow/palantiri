@@ -1,5 +1,4 @@
 'use strict';
-
 require('loadenv')();
 
 var Lab = require('lab');
@@ -16,12 +15,11 @@ var hermesClient = require('runnable-hermes');
 var clone = require('101/clone');
 
 var rabbitClient = require('../../../lib/external/rabbitmq.js');
-console.log('XXXX', rabbitClient);
 
 describe('rabbitmq.js unit test', function () {
-  describe('connect', function() {
+  describe('connect', function () {
     var hermesMock;
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       hermesMock = {
         connect: sinon.stub()
       };
@@ -29,12 +27,12 @@ describe('rabbitmq.js unit test', function () {
       done();
     });
 
-    afterEach(function(done) {
+    afterEach(function (done) {
       hermesClient.hermesSingletonFactory.restore();
       done();
     });
 
-    it('should connect', function(done) {
+    it('should connect', function (done) {
       hermesMock.connect.yieldsAsync();
 
       rabbitClient.connect(function (err) {
@@ -44,15 +42,15 @@ describe('rabbitmq.js unit test', function () {
     });
   }); // end connect
 
-  describe('loadWorkers', function() {
-    beforeEach(function(done) {
+  describe('loadWorkers', function () {
+    beforeEach(function (done) {
       rabbitClient.hermesClient = {
         subscribe: sinon.stub()
       };
       done();
     });
 
-    it('should subscribe health-check', function(done) {
+    it('should subscribe health-check', function (done) {
       rabbitClient.hermesClient.subscribe.returns();
 
       rabbitClient.loadWorkers();
@@ -61,7 +59,7 @@ describe('rabbitmq.js unit test', function () {
       done();
     });
 
-    it('should subscribe docker-health-check', function(done) {
+    it('should subscribe docker-health-check', function (done) {
       rabbitClient.hermesClient.subscribe.returns();
 
       rabbitClient.loadWorkers();
@@ -71,15 +69,15 @@ describe('rabbitmq.js unit test', function () {
     });
   }); // end loadWorkers
 
-  describe('unloadWorkers', function() {
-    beforeEach(function(done) {
+  describe('unloadWorkers', function () {
+    beforeEach(function (done) {
       rabbitClient.hermesClient = {
         unsubscribe: sinon.stub()
       };
       done();
     });
 
-    it('should unsubscribe health-check', function(done) {
+    it('should unsubscribe health-check', function (done) {
       rabbitClient.hermesClient.unsubscribe.yieldsAsync();
 
       rabbitClient.unloadWorkers(function (err) {
@@ -90,7 +88,7 @@ describe('rabbitmq.js unit test', function () {
       });
     });
 
-    it('should unsubscribe docker-health-check', function(done) {
+    it('should unsubscribe docker-health-check', function (done) {
       rabbitClient.hermesClient.unsubscribe.yieldsAsync();
 
       rabbitClient.unloadWorkers(function (err) {
@@ -102,15 +100,15 @@ describe('rabbitmq.js unit test', function () {
     });
   }); // end unloadWorkers
 
-  describe('publishHealthCheck', function() {
-    beforeEach(function(done) {
+  describe('publishHealthCheck', function () {
+    beforeEach(function (done) {
       rabbitClient.hermesClient = {
         publish: sinon.stub()
       };
       done();
     });
 
-    it('should publish health-check', function(done) {
+    it('should publish health-check', function (done) {
       rabbitClient.hermesClient.publish.returns();
 
       rabbitClient.publishHealthCheck();
@@ -125,15 +123,15 @@ describe('rabbitmq.js unit test', function () {
     });
   }); // end publishHealthCheck
 
-  describe('publishDockerHealthCheck', function() {
-    beforeEach(function(done) {
+  describe('publishDockerHealthCheck', function () {
+    beforeEach(function (done) {
       rabbitClient.hermesClient = {
         publish: sinon.stub()
       };
       done();
     });
 
-    it('should publish docker-health-check', function(done) {
+    it('should publish docker-health-check', function (done) {
       var testData = {
         dockerHost: 'testHost',
         githubId: 1253543
@@ -155,7 +153,7 @@ describe('rabbitmq.js unit test', function () {
       done();
     });
 
-    it('should throw if missing keys', function(done) {
+    it('should throw if missing keys', function (done) {
       var testData = {
         dockerHost: 'testHost',
         githubId: 1253543
@@ -172,15 +170,15 @@ describe('rabbitmq.js unit test', function () {
     });
   }); // end publishDockerHealthCheck
 
-  describe('publishOnDockUnhealthy', function() {
-    beforeEach(function(done) {
+  describe('publishOnDockUnhealthy', function () {
+    beforeEach(function (done) {
       rabbitClient.hermesClient = {
         publish: sinon.stub()
       };
       done();
     });
 
-    it('should publish on-dock-unhealthy', function(done) {
+    it('should publish on-dock-unhealthy', function (done) {
       var testData = {
         host: 'testHost',
         githubId: 1253543
@@ -202,7 +200,7 @@ describe('rabbitmq.js unit test', function () {
       done();
     });
 
-    it('should throw if missing keys', function(done) {
+    it('should throw if missing keys', function (done) {
       var testData = {
         host: 'testHost',
         githubId: 1253543
@@ -219,8 +217,8 @@ describe('rabbitmq.js unit test', function () {
     });
   }); // end publishOnDockUnhealthy
 
-  describe('_dataCheck', function() {
-    it('should throw if missing keys', function(done) {
+  describe('_dataCheck', function () {
+    it('should throw if missing keys', function (done) {
       var testData = {
         summon: 'aeon',
       };
@@ -230,7 +228,7 @@ describe('rabbitmq.js unit test', function () {
       done();
     });
 
-    it('should return if keys present', function(done) {
+    it('should return if keys present', function (done) {
       var testData = {
         summon: 'aeon',
       };
