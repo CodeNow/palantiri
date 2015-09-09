@@ -150,6 +150,7 @@ describe('rabbitmq.js unit test', function () {
         .args[0][1].dockerHost).to.equal(testData.dockerHost);
       expect(rabbitClient.hermesClient.publish
         .args[0][1].githubId).to.equal(testData.githubId);
+
       done();
     });
 
@@ -166,6 +167,7 @@ describe('rabbitmq.js unit test', function () {
           rabbitClient.hermesClient.publishDockerHealthCheck(test);
         }).to.throw();
       });
+
       done();
     });
   }); // end publishDockerHealthCheck
@@ -197,6 +199,7 @@ describe('rabbitmq.js unit test', function () {
         .args[0][1].host).to.equal(testData.host);
       expect(rabbitClient.hermesClient.publish
         .args[0][1].githubId).to.equal(testData.githubId);
+
       done();
     });
 
@@ -213,6 +216,7 @@ describe('rabbitmq.js unit test', function () {
           rabbitClient.publishOnDockUnhealthy(test);
         }).to.throw();
       });
+
       done();
     });
   }); // end publishOnDockUnhealthy
@@ -225,6 +229,7 @@ describe('rabbitmq.js unit test', function () {
       expect(function () {
         rabbitClient.constructor._dataCheck(testData, ['summon', 'spell']);
       }).to.throw();
+
       done();
     });
 
@@ -233,6 +238,7 @@ describe('rabbitmq.js unit test', function () {
         summon: 'aeon',
       };
       rabbitClient.constructor._dataCheck(testData, ['summon']);
+
       done();
     });
   }); // end _dataCheck
