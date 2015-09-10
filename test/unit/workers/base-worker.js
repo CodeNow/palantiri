@@ -56,7 +56,7 @@ describe('base-worker.js unit test', function () {
       done();
     });
 
-    afterEach(function(done) {
+    afterEach(function (done) {
       error.create.restore();
       done();
     });
@@ -116,7 +116,7 @@ describe('base-worker.js unit test', function () {
     });
   }); // end worker
 
-  describe('handle', function() {
+  describe('handle', function () {
     it('should throw if not implemented', function (done) {
       expect(function () {
         baseWorker.handle();
@@ -125,7 +125,7 @@ describe('base-worker.js unit test', function () {
     });
   }); // end handle
 
-  describe('isDataValid', function() {
+  describe('isDataValid', function () {
     it('should throw if not implemented', function (done) {
       expect(function () {
         baseWorker.isDataValid();
@@ -134,7 +134,7 @@ describe('base-worker.js unit test', function () {
     });
   }); // end isDataValid
 
-  describe('handleDomainError', function() {
+  describe('handleDomainError', function () {
     it('should log error', function (done) {
       baseWorker.handleDomainError();
       done();

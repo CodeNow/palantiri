@@ -111,14 +111,14 @@ describe('docker-health-check.js unit test', function () {
   }); // end handle
 
   describe('createInfoContainer', function () {
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       dockerHealthCheck.dockerClient = {
         createContainer: sinon.stub()
       };
       done();
     });
 
-    it('should set container on good response', function(done) {
+    it('should set container on good response', function (done) {
       var testContainer = 'Titan';
       dockerHealthCheck.dockerClient.createContainer
         .yieldsAsync(null, testContainer);
@@ -131,7 +131,7 @@ describe('docker-health-check.js unit test', function () {
       });
     });
 
-    it('should cb error', function(done) {
+    it('should cb error', function (done) {
       var testError = 'ice sword';
       dockerHealthCheck.dockerClient.createContainer
         .yieldsAsync(testError);
@@ -145,14 +145,14 @@ describe('docker-health-check.js unit test', function () {
   }); // end createInfoContainer
 
   describe('startInfoContainer', function () {
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       dockerHealthCheck.dockerClient = {
         startContainer: sinon.stub()
       };
       done();
     });
 
-    it('should set container on good response', function(done) {
+    it('should set container on good response', function (done) {
       var testContainer = 'Titan';
       dockerHealthCheck.container = testContainer;
       dockerHealthCheck.dockerClient.startContainer
@@ -167,7 +167,7 @@ describe('docker-health-check.js unit test', function () {
       });
     });
 
-    it('should cb error', function(done) {
+    it('should cb error', function (done) {
       var testError = 'ice sword';
       dockerHealthCheck.dockerClient.startContainer
         .yieldsAsync(testError);
@@ -181,14 +181,14 @@ describe('docker-health-check.js unit test', function () {
   }); // end startInfoContainer
 
   describe('removeInfoContainer', function () {
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       dockerHealthCheck.dockerClient = {
         removeContainer: sinon.stub()
       };
       done();
     });
 
-    it('should set container on good response', function(done) {
+    it('should set container on good response', function (done) {
       var testContainer = 'Titan';
       dockerHealthCheck.container = testContainer;
       dockerHealthCheck.dockerClient.removeContainer
@@ -203,7 +203,7 @@ describe('docker-health-check.js unit test', function () {
       });
     });
 
-    it('should cb error', function(done) {
+    it('should cb error', function (done) {
       var testError = 'ice sword';
       dockerHealthCheck.dockerClient.removeContainer
         .yieldsAsync(testError);
@@ -217,14 +217,14 @@ describe('docker-health-check.js unit test', function () {
   }); // end removeInfoContainer
 
   describe('readInfoContainer', function () {
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       dockerHealthCheck.dockerClient = {
         containerLogs: sinon.stub()
       };
       done();
     });
 
-    it('should set logs on good response', function(done) {
+    it('should set logs on good response', function (done) {
       var testContainer = 'Titan';
       var testLogs = JSON.stringify({ test: 'me' });
       dockerHealthCheck.container = testContainer;
@@ -241,7 +241,7 @@ describe('docker-health-check.js unit test', function () {
       });
     });
 
-    it('should cb error is error emited', function(done) {
+    it('should cb error is error emited', function (done) {
       var testContainer = 'Titan';
       var testLogs = JSON.stringify({ error: 'firestone' });
       dockerHealthCheck.container = testContainer;
@@ -257,7 +257,7 @@ describe('docker-health-check.js unit test', function () {
       });
     });
 
-    it('should error on parse err', function(done) {
+    it('should error on parse err', function (done) {
       var testContainer = 'Titan';
       var testLogs = 'cantparse';
       dockerHealthCheck.container = testContainer;
@@ -273,7 +273,7 @@ describe('docker-health-check.js unit test', function () {
       });
     });
 
-    it('should cb error', function(done) {
+    it('should cb error', function (done) {
       var testError = 'ice sword';
       dockerHealthCheck.dockerClient.containerLogs
         .yieldsAsync(testError);
@@ -287,21 +287,21 @@ describe('docker-health-check.js unit test', function () {
   }); // end readInfoContainer
 
   describe('reportData', function () {
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       sinon.stub(rabbitmq, 'publishOnDockUnhealthy');
       sinon.stub(monitorDog, 'gauge');
       process.env.RSS_LIMIT = 1;
       done();
     });
 
-    afterEach(function(done) {
+    afterEach(function (done) {
       rabbitmq.publishOnDockUnhealthy.restore();
       monitorDog.gauge.restore();
       delete process.env.RSS_LIMIT;
       done();
     });
 
-    it('should send gauge data and not publish unhealthy', function(done) {
+    it('should send gauge data and not publish unhealthy', function (done) {
       var testHost = 'http://localhost:4242';
       var testContainerLogs = {
         info: {
@@ -326,7 +326,7 @@ describe('docker-health-check.js unit test', function () {
       });
     });
 
-    it('should send gauge data and publish unhealthy', function(done) {
+    it('should send gauge data and publish unhealthy', function (done) {
       var testHost = 'http://localhost:4242';
       var testContainerLogs = {
         info: {
@@ -349,8 +349,8 @@ describe('docker-health-check.js unit test', function () {
     });
   }); // end reportData
 
-  describe('isDataValid', function() {
-    it('should return false if data missing keys', function(done) {
+  describe('isDataValid', function () {
+    it('should return false if data missing keys', function (done) {
       var testData = {
         dockerHost: 'host',
         githubId: 2134
@@ -368,7 +368,7 @@ describe('docker-health-check.js unit test', function () {
       done();
     });
 
-    it('should return true if all keys present', function(done) {
+    it('should return true if all keys present', function (done) {
       var testData = {
         dockerHost: 'host',
         githubId: 2134

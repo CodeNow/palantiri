@@ -100,6 +100,34 @@ describe('rabbitmq.js unit test', function () {
     });
   }); // end unloadWorkers
 
+  describe('close', function () {
+    beforeEach(function (done) {
+      rabbitClient.hermesClient = {
+        close: sinon.stub()
+      };
+      done();
+    });
+
+    it('should close', function (done) {
+      rabbitClient.hermesClient.close.yieldsAsync();
+
+      rabbitClient.close(function (err) {
+        expect(err).to.not.exist();
+        expect(rabbitClient.hermesClient).to.be.null();
+        done();
+      });
+    });
+
+    it('should not close if already closed', function (done) {
+      rabbitClient.hermesClient = null;
+
+      rabbitClient.close(function (err) {
+        expect(err).to.not.exist();
+        done();
+      });
+    });
+  }); // end close
+
   describe('publishHealthCheck', function () {
     beforeEach(function (done) {
       rabbitClient.hermesClient = {

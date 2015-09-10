@@ -13,38 +13,38 @@ var expect = Code.expect;
 
 var sinon = require('sinon');
 var str = require('string-to-stream');
-var EventEmitter = require('events').EventEmitter
+var EventEmitter = require('events').EventEmitter;
 
 var Docker = require('../../../lib/external/docker.js');
 
 describe('docker.js unit test', function () {
   var testHost = 'http://localhost:4242';
   var docker;
-  beforeEach(function(done) {
+  beforeEach(function (done) {
     process.env.DOCKER_RETRY_ATTEMPTS = 2;
     process.env.DOCKER_RETRY_INTERVAL = 1;
     docker = new Docker(testHost);
     done();
   });
 
-  afterEach(function(done) {
+  afterEach(function (done) {
     delete process.env.DOCKER_RETRY_ATTEMPTS;
     delete process.env.DOCKER_RETRY_INTERVAL;
     done();
   });
 
-  describe('createContainer', function() {
-    beforeEach(function(done) {
+  describe('createContainer', function () {
+    beforeEach(function (done) {
       sinon.stub(docker.client, 'createContainer');
       done();
     });
 
-    afterEach(function(done) {
+    afterEach(function (done) {
       docker.client.createContainer.restore();
       done();
     });
 
-    it('should call createContainer', function(done) {
+    it('should call createContainer', function (done) {
       var testRes = 'thisisatest';
       var testArgs = 'testArg';
       docker.client.createContainer.yieldsAsync(null, testRes);
@@ -56,7 +56,7 @@ describe('docker.js unit test', function () {
       });
     });
 
-    it('should retry if failed', function(done) {
+    it('should retry if failed', function (done) {
       var testRes = 'thisisatest';
       var testArgs = 'testArg';
       docker.client.createContainer.onCall(0).yieldsAsync('error');
@@ -69,7 +69,7 @@ describe('docker.js unit test', function () {
       });
     });
 
-    it('should cb error if failed over retry count', function(done) {
+    it('should cb error if failed over retry count', function (done) {
       var testError = 'explode';
       var testArgs = 'testArg';
       docker.client.createContainer.onCall(0).yieldsAsync(testError);
@@ -82,16 +82,16 @@ describe('docker.js unit test', function () {
     });
   }); // end createContainer
 
-  describe('startContainer', function() {
+  describe('startContainer', function () {
     var containerMock;
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       containerMock = {
         start: sinon.stub()
       };
       done();
     });
 
-    it('should call startContainer', function(done) {
+    it('should call startContainer', function (done) {
       var testRes = 'thisisatest';
       containerMock.start.yieldsAsync(null, testRes);
       docker.startContainer(containerMock, function (err, res) {
@@ -102,7 +102,7 @@ describe('docker.js unit test', function () {
       });
     });
 
-    it('should retry if failed', function(done) {
+    it('should retry if failed', function (done) {
       var testRes = 'thisisatest';
       containerMock.start.onCall(0).yieldsAsync('error');
       containerMock.start.onCall(1).yieldsAsync(null, testRes);
@@ -114,7 +114,7 @@ describe('docker.js unit test', function () {
       });
     });
 
-    it('should cb error if failed over retry count', function(done) {
+    it('should cb error if failed over retry count', function (done) {
       var testError = 'explode';
       containerMock.start.onCall(0).yieldsAsync(testError);
       containerMock.start.onCall(1).yieldsAsync(testError);
@@ -126,16 +126,16 @@ describe('docker.js unit test', function () {
     });
   }); // end startContainer
 
-  describe('removeContainer', function() {
+  describe('removeContainer', function () {
     var containerMock;
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       containerMock = {
         remove: sinon.stub()
       };
       done();
     });
 
-    it('should call removeContainer', function(done) {
+    it('should call removeContainer', function (done) {
       var testRes = 'thisisatest';
       containerMock.remove.yieldsAsync(null, testRes);
       docker.removeContainer(containerMock, function (err, res) {
@@ -146,7 +146,7 @@ describe('docker.js unit test', function () {
       });
     });
 
-    it('should retry if failed', function(done) {
+    it('should retry if failed', function (done) {
       var testRes = 'thisisatest';
       containerMock.remove.onCall(0).yieldsAsync('error');
       containerMock.remove.onCall(1).yieldsAsync(null, testRes);
@@ -158,7 +158,7 @@ describe('docker.js unit test', function () {
       });
     });
 
-    it('should cb error if failed over retry count', function(done) {
+    it('should cb error if failed over retry count', function (done) {
       var testError = 'explode';
       containerMock.remove.onCall(0).yieldsAsync(testError);
       containerMock.remove.onCall(1).yieldsAsync(testError);
@@ -170,16 +170,16 @@ describe('docker.js unit test', function () {
     });
   }); // end removeContainer
 
-  describe('containerLogs', function() {
+  describe('containerLogs', function () {
     var containerMock;
-    beforeEach(function(done) {
+    beforeEach(function (done) {
       containerMock = {
         logs: sinon.stub()
       };
       done();
     });
 
-    it('should get logs', function(done) {
+    it('should get logs', function (done) {
       var testLog = 'thisisatest';
       containerMock.logs.yieldsAsync(null, str(testLog));
       docker.containerLogs(containerMock, function (err, logs) {
@@ -190,7 +190,7 @@ describe('docker.js unit test', function () {
       });
     });
 
-    it('should cb error is stream error', function(done) {
+    it('should cb error is stream error', function (done) {
       var testLogLog = 'thisisatest';
       var errorEmittor = new EventEmitter();
       process.env.DOCKER_RETRY_ATTEMPTS = 1;
@@ -205,7 +205,7 @@ describe('docker.js unit test', function () {
       errorEmittor.emit('error', testLogLog);
     });
 
-    it('should retry if failed', function(done) {
+    it('should retry if failed', function (done) {
       var testLog = 'thisisatest';
       containerMock.logs.onCall(0).yieldsAsync('error');
       containerMock.logs.onCall(1).yieldsAsync(null, str(testLog));
@@ -217,7 +217,7 @@ describe('docker.js unit test', function () {
       });
     });
 
-    it('should cb error if failed over retry count', function(done) {
+    it('should cb error if failed over retry count', function (done) {
       var testError = 'explode';
       containerMock.logs.onCall(0).yieldsAsync(testError);
       containerMock.logs.onCall(1).yieldsAsync(testError);

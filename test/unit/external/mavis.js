@@ -18,30 +18,30 @@ var mavisClient = require('../../../lib/external/mavis.js');
 
 describe('mavis.js unit test', function () {
   var testHost = 'http://localhost:4000';
-  beforeEach(function(done) {
+  beforeEach(function (done) {
     process.env.MAVIS_HOST = testHost;
     process.env.MAVIS_RETRY_DELAY = 1;
     process.env.MAVIS_RETRY_ATTEMPTS = 2;
     done();
   });
 
-  afterEach(function(done) {
+  afterEach(function (done) {
     delete process.env.MAVIS_HOST;
     done();
   });
 
-  describe('getDocks', function() {
-    beforeEach(function(done) {
+  describe('getDocks', function () {
+    beforeEach(function (done) {
       sinon.stub(request.Request, 'request');
       done();
     });
 
-    afterEach(function(done) {
+    afterEach(function (done) {
       request.Request.request.restore();
       done();
     });
 
-    it('should return docks', function(done) {
+    it('should return docks', function (done) {
       var testArgs = { test: 1234 };
       var testRes = JSON.stringify(testArgs);
       request.Request.request.onCall(0).yieldsAsync(null, {}, testRes);
@@ -52,7 +52,7 @@ describe('mavis.js unit test', function () {
       });
     });
 
-    it('should retry for 1 ECONNRESET error', function(done) {
+    it('should retry for 1 ECONNRESET error', function (done) {
       var testArgs = { test: 1234 };
       var testRes = JSON.stringify(testArgs);
       request.Request.request.onCall(0).yieldsAsync({
@@ -66,7 +66,7 @@ describe('mavis.js unit test', function () {
       });
     });
 
-    it('should fails for 2 ECONNRESET error', function(done) {
+    it('should fails for 2 ECONNRESET error', function (done) {
       request.Request.request.onCall(0).yieldsAsync({
         code: 'ECONNRESET'
       });
@@ -79,7 +79,7 @@ describe('mavis.js unit test', function () {
       });
     });
 
-    it('should error if parse error', function(done) {
+    it('should error if parse error', function (done) {
       var testRes = 'no parse';
       request.Request.request.onCall(0).yieldsAsync(null, {}, testRes);
       mavisClient.getDocks(function (err) {
@@ -88,7 +88,7 @@ describe('mavis.js unit test', function () {
       });
     });
 
-    it('should error if non network error', function(done) {
+    it('should error if non network error', function (done) {
       var testErr = new Error('ice rocket');
       request.Request.request.onCall(0).yieldsAsync(testErr);
       mavisClient.getDocks(function (err) {

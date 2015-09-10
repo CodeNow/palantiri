@@ -128,8 +128,8 @@ describe('health-check.js unit test', function () {
     });
   }); // end handle
 
-  describe('isDataValid', function() {
-    it('should always return true', function(done) {
+  describe('isDataValid', function () {
+    it('should always return true', function (done) {
       [{}, [], null, undefined, false, true, 'hi'].forEach(function (item) {
         expect(healthCheck.isDataValid(item)).to.be.true();
       });
