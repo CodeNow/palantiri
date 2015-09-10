@@ -52,10 +52,10 @@ describe('app.js unit test', function () {
         expect(rabbitClient.connect.called).to.be.true();
         expect(app.interval).to.exist();
         setTimeout(function () {
-          expect(rabbitClient.publishHealthCheck.called).to.be.true();
-
+          expect(rabbitClient.publishHealthCheck.callCount)
+            .to.be.above(1);
           done();
-        }, 100);
+        }, 10);
       });
     });
 
