@@ -56,10 +56,10 @@ describe('functional test', function () {
     };
     dockerStub.logs.yieldsAsync(null, fakeStream);
 
-    request.Request.request.yieldsAsync(null, null, JSON.stringify([{
+    request.Request.request.yieldsAsync(null, null, [{
       host: 'http://localhost:4242',
       tags: 'build,run,1111'
-    }]));
+    }]);
     var interval = setInterval(function () {
       if (dockerStub.remove.called) {
         clearInterval(interval);
@@ -81,10 +81,10 @@ describe('functional test', function () {
     };
     dockerStub.logs.yieldsAsync(null, fakeStream);
 
-    request.Request.request.yieldsAsync(null, null, JSON.stringify([{
+    request.Request.request.yieldsAsync(null, null, [{
       host: testHost,
       tags: 'build,run,1111'
-    }]));
+    }]);
 
     rabbitClient.hermesClient.subscribe('on-dock-unhealthy', function (data, cb) {
       cb();
