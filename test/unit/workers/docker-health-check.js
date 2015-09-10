@@ -96,13 +96,17 @@ describe('docker-health-check.js unit test', function () {
 
     it('should return error if one failed', function (done) {
       var testErr = 'meltdown';
+      var testData = {
+        dockerHost: 'http://localhost:4242',
+        githubId: 123215
+      };
       DockerHealthCheck.prototype.createInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.startInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.readInfoContainer.yieldsAsync(testErr);
       DockerHealthCheck.prototype.reportData.yieldsAsync();
       DockerHealthCheck.prototype.removeInfoContainer.yieldsAsync();
 
-      dockerHealthCheck.handle({}, function (err) {
+      dockerHealthCheck.handle(testData, function (err) {
         expect(err).to.exist();
 
         done();
