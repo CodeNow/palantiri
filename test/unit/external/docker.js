@@ -129,6 +129,7 @@ describe('docker.js unit test', function () {
       docker.pullImage(testImage, function (err) {
         expect(err).to.equal(testError);
         expect(docker.client.pull.withArgs(testImage).calledTwice).to.be.true();
+
         done();
       });
     });
@@ -153,6 +154,7 @@ describe('docker.js unit test', function () {
         expect(err).to.not.exist();
         expect(res).to.equal(testRes);
         expect(docker.client.createContainer.withArgs(testArgs).calledOnce).to.be.true();
+
         done();
       });
     });
@@ -166,6 +168,7 @@ describe('docker.js unit test', function () {
         expect(err).to.not.exist();
         expect(res).to.equal(testRes);
         expect(docker.client.createContainer.withArgs(testArgs).calledTwice).to.be.true();
+
         done();
       });
     });
@@ -178,6 +181,7 @@ describe('docker.js unit test', function () {
       docker.createContainer(testArgs, function (err) {
         expect(err).to.equal(testError);
         expect(docker.client.createContainer.withArgs(testArgs).calledTwice).to.be.true();
+
         done();
       });
     });
@@ -199,6 +203,7 @@ describe('docker.js unit test', function () {
         expect(err).to.not.exist();
         expect(res).to.equal(testRes);
         expect(containerMock.start.calledOnce).to.be.true();
+
         done();
       });
     });
@@ -211,6 +216,7 @@ describe('docker.js unit test', function () {
         expect(err).to.not.exist();
         expect(res).to.equal(testRes);
         expect(containerMock.start.calledTwice).to.be.true();
+
         done();
       });
     });
@@ -222,6 +228,7 @@ describe('docker.js unit test', function () {
       docker.startContainer(containerMock, function (err) {
         expect(err).to.equal(testError);
         expect(containerMock.start.calledTwice).to.be.true();
+
         done();
       });
     });
@@ -243,6 +250,7 @@ describe('docker.js unit test', function () {
         expect(err).to.not.exist();
         expect(res).to.equal(testRes);
         expect(containerMock.remove.calledOnce).to.be.true();
+
         done();
       });
     });
@@ -255,6 +263,7 @@ describe('docker.js unit test', function () {
         expect(err).to.not.exist();
         expect(res).to.equal(testRes);
         expect(containerMock.remove.calledTwice).to.be.true();
+
         done();
       });
     });
@@ -302,6 +311,7 @@ describe('docker.js unit test', function () {
         expect(err).to.not.exist();
         expect(logs).to.equal(testLog);
         expect(containerMock.logs.calledOnce).to.be.true();
+
         done();
       });
     });
@@ -315,6 +325,7 @@ describe('docker.js unit test', function () {
       docker.containerLogs(containerMock, function (err) {
         expect(err).to.equal(testLogLog);
         expect(containerMock.logs.calledOnce).to.be.true();
+
         done();
       });
     });
@@ -327,6 +338,7 @@ describe('docker.js unit test', function () {
         expect(err).to.not.exist();
         expect(logs).to.equal(testLog);
         expect(containerMock.logs.calledTwice).to.be.true();
+
         done();
       });
     });
@@ -338,6 +350,7 @@ describe('docker.js unit test', function () {
       docker.containerLogs(containerMock, function (err) {
         expect(err).to.equal(testError);
         expect(containerMock.logs.calledTwice).to.be.true();
+
         done();
       });
     });
