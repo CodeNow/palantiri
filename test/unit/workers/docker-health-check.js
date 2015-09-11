@@ -54,6 +54,7 @@ describe('docker-health-check.js unit test', function () {
 
   describe('handle', function () {
     beforeEach(function (done) {
+      sinon.stub(DockerHealthCheck.prototype, 'pullInfoContainer');
       sinon.stub(DockerHealthCheck.prototype, 'createInfoContainer');
       sinon.stub(DockerHealthCheck.prototype, 'startInfoContainer');
       sinon.stub(DockerHealthCheck.prototype, 'readInfoContainer');
@@ -64,6 +65,7 @@ describe('docker-health-check.js unit test', function () {
     });
 
     afterEach(function (done) {
+      DockerHealthCheck.prototype.pullInfoContainer.restore();
       DockerHealthCheck.prototype.createInfoContainer.restore();
       DockerHealthCheck.prototype.startInfoContainer.restore();
       DockerHealthCheck.prototype.readInfoContainer.restore();
@@ -78,6 +80,7 @@ describe('docker-health-check.js unit test', function () {
         dockerHost: 'http://localhost:4242',
         githubId: 123215
       };
+      DockerHealthCheck.prototype.pullInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.createInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.startInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.readInfoContainer.yieldsAsync();
@@ -100,6 +103,7 @@ describe('docker-health-check.js unit test', function () {
         dockerHost: 'http://localhost:4242',
         githubId: 123215
       };
+      DockerHealthCheck.prototype.pullInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.createInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.startInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.readInfoContainer.yieldsAsync(testErr);
@@ -113,6 +117,38 @@ describe('docker-health-check.js unit test', function () {
       });
     });
   }); // end handle
+
+  describe('pullInfoContainer', function () {
+    beforeEach(function (done) {
+      dockerHealthCheck.dockerClient = {
+        pullImage: sinon.stub()
+      };
+      done();
+    });
+
+    it('should cb on good response', function (done) {
+      dockerHealthCheck.dockerClient.pullImage
+        .yieldsAsync(null);
+
+      dockerHealthCheck.pullInfoContainer(function (err) {
+        expect(err).to.not.exist();
+
+        done();
+      });
+    });
+
+    it('should cb error', function (done) {
+      var testError = 'ice sword';
+      dockerHealthCheck.dockerClient.pullImage
+        .yieldsAsync(testError);
+
+      dockerHealthCheck.pullInfoContainer(function (err) {
+        expect(err).to.exist();
+
+        done();
+      });
+    });
+  }); // end pullInfoContainer
 
   describe('createInfoContainer', function () {
     beforeEach(function (done) {
@@ -156,7 +192,7 @@ describe('docker-health-check.js unit test', function () {
       done();
     });
 
-    it('should set container on good response', function (done) {
+    it('should cb good response', function (done) {
       var testContainer = 'Titan';
       dockerHealthCheck.container = testContainer;
       dockerHealthCheck.dockerClient.startContainer
@@ -192,7 +228,7 @@ describe('docker-health-check.js unit test', function () {
       done();
     });
 
-    it('should set container on good response', function (done) {
+    it('should cb on good response', function (done) {
       var testContainer = 'Titan';
       dockerHealthCheck.container = testContainer;
       dockerHealthCheck.dockerClient.removeContainer

@@ -13,9 +13,9 @@ var expect = Code.expect;
 var sinon = require('sinon');
 var Dockerode = require('dockerode');
 var request = require('requestretry');
-var Buffer = require('buffer').Buffer;
 var rabbitClient = require('../../lib/external/rabbitmq.js');
 var App = require('../../lib/app.js');
+var Docker = require('../../lib/external/docker.js');
 
 describe('functional test', function () {
   var app;
@@ -36,6 +36,8 @@ describe('functional test', function () {
     };
     sinon.stub(Dockerode.prototype, 'createContainer')
       .yieldsAsync(null, dockerStub);
+    sinon.stub(Docker.prototype, 'pullImage')
+      .yieldsAsync(null);
     sinon.stub(request.Request, 'request');
     app = new App();
     app.start(done);
@@ -46,6 +48,7 @@ describe('functional test', function () {
     delete process.env.RSS_LIMIT;
     request.Request.request.restore();
     Dockerode.prototype.createContainer.restore();
+    Docker.prototype.pullImage.restore();
     app.stop(done);
   });
 
