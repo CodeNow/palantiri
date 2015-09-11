@@ -13,7 +13,7 @@ var expect = Code.expect;
 
 var sinon = require('sinon');
 var str = require('string-to-stream');
-var EventEmitter = require('events').EventEmitter;
+var fs = require('fs');
 
 var Docker = require('../../../lib/external/docker.js');
 
@@ -32,6 +32,107 @@ describe('docker.js unit test', function () {
     delete process.env.DOCKER_RETRY_INTERVAL;
     done();
   });
+
+  describe('loadCerts', function() {
+    beforeEach(function(done) {
+      sinon.stub(fs, 'readFileSync');
+      done();
+    });
+
+    afterEach(function(done) {
+      fs.readFileSync.restore();
+      done();
+    });
+
+    it('should load certs', function(done) {
+      fs.readFileSync.returns();
+      Docker.loadCerts();
+
+      done();
+    });
+
+    it('should not load certs', function(done) {
+      fs.readFileSync.throws();
+      Docker.loadCerts();
+
+      done();
+    });
+  }); // end loadCerts
+
+  describe('pullImage', function () {
+    var testImage = 'runnable/libra';
+    beforeEach(function (done) {
+      sinon.stub(docker.client, 'pull');
+      sinon.stub(docker.client.modem, 'followProgress');
+      done();
+    });
+
+    afterEach(function (done) {
+      docker.client.pull.restore();
+      done();
+    });
+
+    it('should call pull', function (done) {
+      var testStream = 'thisisatest';
+      docker.client.pull.yieldsAsync(null, testStream);
+      docker.client.modem.followProgress.yieldsAsync(null);
+
+      docker.pullImage(testImage, function (err) {
+        expect(err).to.not.exist();
+        expect(docker.client.pull
+          .withArgs(testImage).calledOnce).to.be.true();
+        expect(docker.client.modem.followProgress
+          .withArgs(testStream).calledOnce).to.be.true();
+
+        done();
+      });
+    });
+
+    it('should retry if pull failed', function (done) {
+      var testStream = 'thisisatest';
+      docker.client.pull.onCall(0).yieldsAsync('error');
+      docker.client.pull.onCall(1).yieldsAsync(null, testStream);
+      docker.client.modem.followProgress.yieldsAsync(null);
+
+      docker.pullImage(testImage, function (err) {
+        expect(err).to.not.exist();
+        expect(docker.client.pull
+          .withArgs(testImage).calledTwice).to.be.true();
+        expect(docker.client.modem.followProgress
+          .withArgs(testStream).calledOnce).to.be.true();
+
+        done();
+      });
+    });
+
+    it('should retry if followProgress failed', function (done) {
+      var testStream = 'thisisatest';
+      docker.client.pull.yieldsAsync(null, testStream);
+      docker.client.modem.followProgress.onCall(0).yieldsAsync('error');
+      docker.client.modem.followProgress.onCall(1).yieldsAsync(null);
+
+      docker.pullImage(testImage, function (err) {
+        expect(err).to.not.exist();
+        expect(docker.client.pull
+          .withArgs(testImage).calledTwice).to.be.true();
+        expect(docker.client.modem.followProgress
+          .withArgs(testStream).calledTwice).to.be.true();
+
+        done();
+      });
+    });
+
+    it('should cb error if failed over retry count', function (done) {
+      var testError = 'explode';
+      docker.client.pull.onCall(0).yieldsAsync(testError);
+      docker.client.pull.onCall(1).yieldsAsync(testError);
+      docker.pullImage(testImage, function (err) {
+        expect(err).to.equal(testError);
+        expect(docker.client.pull.withArgs(testImage).calledTwice).to.be.true();
+        done();
+      });
+    });
+  }); // end pullImage
 
   describe('createContainer', function () {
     beforeEach(function (done) {
@@ -174,7 +275,21 @@ describe('docker.js unit test', function () {
     var containerMock;
     beforeEach(function (done) {
       containerMock = {
-        logs: sinon.stub()
+        isErr: false,
+        logs: sinon.stub(),
+        modem: {
+          demuxStream: function (input, stdout, stderr) {
+            if (containerMock.isErr) {
+              input.on('data', function (d) {
+                stderr.write(d);
+              });
+            } else {
+              input.on('data', function (d) {
+                stdout.write(d);
+              });
+            }
+          }
+        }
       };
       done();
     });
@@ -182,6 +297,7 @@ describe('docker.js unit test', function () {
     it('should get logs', function (done) {
       var testLog = 'thisisatest';
       containerMock.logs.yieldsAsync(null, str(testLog));
+
       docker.containerLogs(containerMock, function (err, logs) {
         expect(err).to.not.exist();
         expect(logs).to.equal(testLog);
@@ -191,18 +307,16 @@ describe('docker.js unit test', function () {
     });
 
     it('should cb error is stream error', function (done) {
+      containerMock.isErr = true;
       var testLogLog = 'thisisatest';
-      var errorEmittor = new EventEmitter();
       process.env.DOCKER_RETRY_ATTEMPTS = 1;
-      containerMock.logs.yields(null, errorEmittor);
+      containerMock.logs.yields(null, str(testLogLog));
 
       docker.containerLogs(containerMock, function (err) {
         expect(err).to.equal(testLogLog);
         expect(containerMock.logs.calledOnce).to.be.true();
         done();
       });
-
-      errorEmittor.emit('error', testLogLog);
     });
 
     it('should retry if failed', function (done) {

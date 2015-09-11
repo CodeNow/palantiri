@@ -13,7 +13,7 @@ var expect = Code.expect;
 var sinon = require('sinon');
 var Dockerode = require('dockerode');
 var request = require('requestretry');
-
+var Buffer = require('buffer').Buffer;
 var rabbitClient = require('../../lib/external/rabbitmq.js');
 var App = require('../../lib/app.js');
 
@@ -28,6 +28,11 @@ describe('functional test', function () {
       start: sinon.stub().yieldsAsync(),
       remove: sinon.stub().yieldsAsync(),
       logs: sinon.stub(),
+      modem: {
+        demuxStream: function (input, stdout) {
+          stdout.write(JSON.stringify({ info: { VmRSS: '1234 kb' } }));
+        }
+      }
     };
     sinon.stub(Dockerode.prototype, 'createContainer')
       .yieldsAsync(null, dockerStub);
@@ -47,11 +52,7 @@ describe('functional test', function () {
   it('should run health check for docks', function (done) {
     var fakeStream = {
       on: function (e, cb) {
-        if (e === 'data') {
-          cb(JSON.stringify({ info: { VmRSS: '1234 kb' } }));
-        } else if (e === 'end') {
-          cb();
-        }
+        cb();
       }
     };
     dockerStub.logs.yieldsAsync(null, fakeStream);
@@ -69,14 +70,11 @@ describe('functional test', function () {
   });
 
   it('should emit unhealthy event if dock unhealthy', function (done) {
+    process.env.RSS_LIMIT = 1;
     var testHost = 'http://localhost:4242';
     var fakeStream = {
       on: function (e, cb) {
-        if (e === 'data') {
-          cb(JSON.stringify({ info: { VmRSS: '9999 kb' } }));
-        } else if (e === 'end') {
-          cb();
-        }
+        cb();
       }
     };
     dockerStub.logs.yieldsAsync(null, fakeStream);
