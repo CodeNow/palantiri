@@ -100,7 +100,7 @@ describe('health-check.js unit test', function () {
     it('should use default if no githubId', function (done) {
       var testHosts = [{
         host: 'host1',
-        tags: 'asdgg'
+        tags: 'notGithubId'
       }];
       mavisClient.getDocks.yieldsAsync(null, testHosts);
       rabbitmq.publishDockerHealthCheck.returns();
