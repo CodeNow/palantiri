@@ -21,12 +21,14 @@ describe('mavis.js unit test', function () {
   beforeEach(function (done) {
     process.env.MAVIS_HOST = testHost;
     process.env.MAVIS_RETRY_DELAY = 1;
-    process.env.MAVIS_RETRY_ATTEMPTS = 1;
+    process.env.MAVIS_RETRY_ATTEMPTS = 2;
     done();
   });
 
   afterEach(function (done) {
     delete process.env.MAVIS_HOST;
+    delete process.env.MAVIS_RETRY_DELAY;
+    delete process.env.MAVIS_RETRY_ATTEMPTS;
     done();
   });
 

@@ -97,18 +97,20 @@ describe('health-check.js unit test', function () {
       });
     });
 
-    it('should error if no githubId', function (done) {
+    it('should use default if no githubId', function (done) {
       var testHosts = [{
         host: 'host1',
-        tags: 'default'
+        tags: 'notGithubId'
       }];
       mavisClient.getDocks.yieldsAsync(null, testHosts);
       rabbitmq.publishDockerHealthCheck.returns();
 
       healthCheck.handle(null, function (err) {
         expect(err).to.not.exist();
-        expect(rabbitmq.publishDockerHealthCheck.called)
-          .to.be.false();
+        expect(rabbitmq.publishDockerHealthCheck.withArgs({
+          dockerHost: 'host1',
+          githubId: 'default'
+        }).called).to.be.true();
 
         done();
       });
