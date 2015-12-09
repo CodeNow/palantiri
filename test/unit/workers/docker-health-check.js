@@ -17,6 +17,7 @@ var clone = require('101/clone');
 var DockerHealthCheck = require('../../../lib/workers/docker-health-check.js');
 var rabbitmq = require('../../../lib/external/rabbitmq.js');
 var monitorDog = require('monitor-dog');
+var ErrorCat = require('error-cat');
 
 describe('docker-health-check.js unit test', function () {
   var dockerHealthCheck;
@@ -427,11 +428,13 @@ describe('docker-health-check.js unit test', function () {
   describe('checkErrorForMemoryFailure', function () {
     beforeEach(function (done) {
       sinon.stub(rabbitmq, 'publishOnDockUnhealthy');
+      sinon.stub(ErrorCat.prototype, 'createAndReport');
       done();
     });
 
     afterEach(function (done) {
       rabbitmq.publishOnDockUnhealthy.restore();
+      ErrorCat.prototype.createAndReport.restore();
       done();
     });
     it('should publish dock unhealthy when cannot allocate memory', function (done) {
@@ -440,6 +443,10 @@ describe('docker-health-check.js unit test', function () {
       dockerHealthCheck.dockerHost = 'host';
       dockerHealthCheck.checkErrorForMemoryFailure(testError);
 
+      sinon.assert.calledOnce(ErrorCat.prototype.createAndReport, 503, testError.message, {
+        dockerHost: 'host',
+        githubId: 2134
+      });
       sinon.assert.calledOnce(rabbitmq.publishOnDockUnhealthy);
       sinon.assert.calledWith(rabbitmq.publishOnDockUnhealthy, {
         githubId: 2134,
@@ -451,6 +458,7 @@ describe('docker-health-check.js unit test', function () {
       var testError = 'Error pulling image (latest) from docker.io/runnable/libra, Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot pop bottles';
       dockerHealthCheck.githubId = 2134;
       dockerHealthCheck.dockerHost = 'host';
+      sinon.assert.notCalled(ErrorCat.prototype.createAndReport);
       dockerHealthCheck.checkErrorForMemoryFailure(testError);
 
       sinon.assert.notCalled(rabbitmq.publishOnDockUnhealthy);
