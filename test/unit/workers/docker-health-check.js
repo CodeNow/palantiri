@@ -91,7 +91,7 @@ describe('docker-health-check.js unit test', function () {
 
       dockerHealthCheck.handle(testData, function (err) {
         expect(err).to.not.exist();
-        sinon.assert.calledWith(DockerHealthCheck.prototype.checkErrorForMemoryFailure, err);
+        sinon.assert.notCalled(DockerHealthCheck.prototype.checkErrorForMemoryFailure);
         expect(dockerHealthCheck.dockerClient).to.exist();
         expect(dockerHealthCheck.githubId)
           .to.equal(testData.githubId);
@@ -448,7 +448,7 @@ describe('docker-health-check.js unit test', function () {
       done();
     });
     it('should not do anything when the error doesn\'t match', function (done) {
-      var testError = new Error('Error pulling image (latest) from docker.io/runnable/libra, Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot pop bottles');
+      var testError = 'Error pulling image (latest) from docker.io/runnable/libra, Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot pop bottles';
       dockerHealthCheck.githubId = 2134;
       dockerHealthCheck.dockerHost = 'host';
       dockerHealthCheck.checkErrorForMemoryFailure(testError);
