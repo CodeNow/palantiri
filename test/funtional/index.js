@@ -9,6 +9,7 @@ var afterEach = lab.afterEach;
 var beforeEach = lab.beforeEach;
 var Code = require('code');
 var expect = Code.expect;
+var ErrorCat = require('error-cat');
 
 var sinon = require('sinon');
 var Dockerode = require('dockerode');
@@ -36,6 +37,7 @@ describe('functional test', function () {
     };
     sinon.stub(Dockerode.prototype, 'createContainer')
       .yieldsAsync(null, dockerStub);
+    sinon.stub(ErrorCat.prototype, 'createAndReport');
     sinon.stub(Docker.prototype, 'pullImage')
       .yieldsAsync(null);
     sinon.stub(request.Request, 'request');
@@ -49,6 +51,7 @@ describe('functional test', function () {
     request.Request.request.restore();
     Dockerode.prototype.createContainer.restore();
     Docker.prototype.pullImage.restore();
+    ErrorCat.prototype.createAndReport.restore();
     app.stop(done);
   });
 
