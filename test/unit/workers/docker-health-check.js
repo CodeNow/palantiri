@@ -17,6 +17,7 @@ var clone = require('101/clone');
 var DockerHealthCheck = require('../../../lib/workers/docker-health-check.js');
 var rabbitmq = require('../../../lib/external/rabbitmq.js');
 var monitorDog = require('monitor-dog');
+var ErrorCat = require('error-cat');
 
 describe('docker-health-check.js unit test', function () {
   var dockerHealthCheck;
@@ -60,6 +61,7 @@ describe('docker-health-check.js unit test', function () {
       sinon.stub(DockerHealthCheck.prototype, 'readInfoContainer');
       sinon.stub(DockerHealthCheck.prototype, 'reportData');
       sinon.stub(DockerHealthCheck.prototype, 'removeInfoContainer');
+      sinon.stub(DockerHealthCheck.prototype, 'checkErrorForMemoryFailure');
 
       done();
     });
@@ -71,6 +73,7 @@ describe('docker-health-check.js unit test', function () {
       DockerHealthCheck.prototype.readInfoContainer.restore();
       DockerHealthCheck.prototype.reportData.restore();
       DockerHealthCheck.prototype.removeInfoContainer.restore();
+      DockerHealthCheck.prototype.checkErrorForMemoryFailure.restore();
 
       done();
     });
@@ -89,6 +92,7 @@ describe('docker-health-check.js unit test', function () {
 
       dockerHealthCheck.handle(testData, function (err) {
         expect(err).to.not.exist();
+        sinon.assert.notCalled(DockerHealthCheck.prototype.checkErrorForMemoryFailure);
         expect(dockerHealthCheck.dockerClient).to.exist();
         expect(dockerHealthCheck.githubId)
           .to.equal(testData.githubId);
@@ -112,6 +116,7 @@ describe('docker-health-check.js unit test', function () {
 
       dockerHealthCheck.handle(testData, function (err) {
         expect(err).to.exist();
+        sinon.assert.calledWith(DockerHealthCheck.prototype.checkErrorForMemoryFailure, err);
 
         done();
       });
@@ -419,4 +424,45 @@ describe('docker-health-check.js unit test', function () {
       done();
     });
   }); // end isDataValid
+
+  describe('checkErrorForMemoryFailure', function () {
+    beforeEach(function (done) {
+      sinon.stub(rabbitmq, 'publishOnDockUnhealthy');
+      sinon.stub(ErrorCat.prototype, 'createAndReport');
+      done();
+    });
+
+    afterEach(function (done) {
+      rabbitmq.publishOnDockUnhealthy.restore();
+      ErrorCat.prototype.createAndReport.restore();
+      done();
+    });
+    it('should publish dock unhealthy when cannot allocate memory', function (done) {
+      var testError = new Error('Error pulling image (latest) from docker.io/runnable/libra, Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot allocate memory');
+      dockerHealthCheck.githubId = 2134;
+      dockerHealthCheck.dockerHost = 'host';
+      dockerHealthCheck.checkErrorForMemoryFailure(testError);
+
+      sinon.assert.calledOnce(ErrorCat.prototype.createAndReport, 503, testError.message, {
+        dockerHost: 'host',
+        githubId: 2134
+      });
+      sinon.assert.calledOnce(rabbitmq.publishOnDockUnhealthy);
+      sinon.assert.calledWith(rabbitmq.publishOnDockUnhealthy, {
+        githubId: 2134,
+        host: 'host'
+      });
+      done();
+    });
+    it('should not do anything when the error doesn\'t match', function (done) {
+      var testError = 'Error pulling image (latest) from docker.io/runnable/libra, Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot pop bottles';
+      dockerHealthCheck.githubId = 2134;
+      dockerHealthCheck.dockerHost = 'host';
+      sinon.assert.notCalled(ErrorCat.prototype.createAndReport);
+      dockerHealthCheck.checkErrorForMemoryFailure(testError);
+
+      sinon.assert.notCalled(rabbitmq.publishOnDockUnhealthy);
+      done();
+    });
+  });
 });
