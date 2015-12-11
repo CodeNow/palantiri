@@ -1,6 +1,6 @@
 {
   "name": "palantiri",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Monitors health and sends out notifications of unhealthiness throughout the land",
   "main": "index.js",
   "scripts": {
