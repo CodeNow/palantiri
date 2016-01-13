@@ -144,7 +144,7 @@ describe('docker-health-check.js unit test', function () {
     it('should cb if dock is in rotation', function (done) {
       var testDockerHost = 'http://localhost:4242';
       dockerHealthCheck.dockerHost = testDockerHost;
-      mavis.getDocks.yieldsAsync(null, [testDockerHost]);
+      mavis.getDocks.yieldsAsync(null, [{host: testDockerHost}]);
 
       dockerHealthCheck.ensureDockExist(function (err) {
         if (err) { return done(err); }
@@ -167,7 +167,7 @@ describe('docker-health-check.js unit test', function () {
     });
 
     it('should cb err if dock not in list', function (done) {
-      mavis.getDocks.yieldsAsync(null, ['http://nothost:4242']);
+      mavis.getDocks.yieldsAsync(null, [{host: 'http://nothost:4242'}]);
 
       dockerHealthCheck.ensureDockExist(function (err) {
         expect(err.output.statusCode).to.equal(400);
