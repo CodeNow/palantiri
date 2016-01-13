@@ -11,13 +11,15 @@ var beforeEach = lab.beforeEach;
 var Code = require('code');
 var expect = Code.expect;
 
-var sinon = require('sinon');
 var clone = require('101/clone');
+var ErrorCat = require('error-cat');
+var monitorDog = require('monitor-dog');
+var sinon = require('sinon');
 
 var DockerHealthCheck = require('../../../lib/workers/docker-health-check.js');
+var mavis = require('../../../lib/external/mavis.js');
 var rabbitmq = require('../../../lib/external/rabbitmq.js');
-var monitorDog = require('monitor-dog');
-var ErrorCat = require('error-cat');
+
 
 describe('docker-health-check.js unit test', function () {
   var dockerHealthCheck;
@@ -55,6 +57,7 @@ describe('docker-health-check.js unit test', function () {
 
   describe('handle', function () {
     beforeEach(function (done) {
+      sinon.stub(DockerHealthCheck.prototype, 'ensureDockExist');
       sinon.stub(DockerHealthCheck.prototype, 'pullInfoContainer');
       sinon.stub(DockerHealthCheck.prototype, 'createInfoContainer');
       sinon.stub(DockerHealthCheck.prototype, 'startInfoContainer');
@@ -67,6 +70,7 @@ describe('docker-health-check.js unit test', function () {
     });
 
     afterEach(function (done) {
+      DockerHealthCheck.prototype.ensureDockExist.restore();
       DockerHealthCheck.prototype.pullInfoContainer.restore();
       DockerHealthCheck.prototype.createInfoContainer.restore();
       DockerHealthCheck.prototype.startInfoContainer.restore();
@@ -83,6 +87,7 @@ describe('docker-health-check.js unit test', function () {
         dockerHost: 'http://localhost:4242',
         githubId: 123215
       };
+      DockerHealthCheck.prototype.ensureDockExist.yieldsAsync();
       DockerHealthCheck.prototype.pullInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.createInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.startInfoContainer.yieldsAsync();
@@ -107,6 +112,8 @@ describe('docker-health-check.js unit test', function () {
         dockerHost: 'http://localhost:4242',
         githubId: 123215
       };
+
+      DockerHealthCheck.prototype.ensureDockExist.yieldsAsync();
       DockerHealthCheck.prototype.pullInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.createInfoContainer.yieldsAsync();
       DockerHealthCheck.prototype.startInfoContainer.yieldsAsync();
@@ -122,6 +129,54 @@ describe('docker-health-check.js unit test', function () {
       });
     });
   }); // end handle
+
+  describe('ensureDockExist', function () {
+    beforeEach(function (done) {
+      sinon.stub(mavis, 'getDocks');
+      done();
+    });
+
+    afterEach(function (done) {
+      mavis.getDocks.restore();
+      done();
+    });
+
+    it('should cb if dock is in rotation', function (done) {
+      var testDockerHost = 'http://localhost:4242';
+      dockerHealthCheck.dockerHost = testDockerHost;
+      mavis.getDocks.yieldsAsync(null, [testDockerHost]);
+
+      dockerHealthCheck.ensureDockExist(function (err) {
+        if (err) { return done(err); }
+
+        sinon.assert.calledOnce(mavis.getDocks);
+        done();
+      });
+    });
+
+    it('should cb err if mavis cb error', function (done) {
+      var testError = 'ice sword';
+      mavis.getDocks.yieldsAsync(testError);
+
+      dockerHealthCheck.ensureDockExist(function (err) {
+        expect(err).to.equal(testError);
+        sinon.assert.calledOnce(mavis.getDocks);
+
+        done();
+      });
+    });
+
+    it('should cb err if dock not in list', function (done) {
+      mavis.getDocks.yieldsAsync(null, ['http://nothost:4242']);
+
+      dockerHealthCheck.ensureDockExist(function (err) {
+        expect(err.output.statusCode).to.equal(400);
+        sinon.assert.calledOnce(mavis.getDocks);
+
+        done();
+      });
+    });
+  }); // end ensureDockExist
 
   describe('pullInfoContainer', function () {
     beforeEach(function (done) {
