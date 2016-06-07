@@ -1,0 +1,6 @@
+dependencies:
+  override:
+    - nvm install 4.2.2
+    - nvm alias default 4.2.2
+    - npm install -g npm@2.14.7
+    - npm install

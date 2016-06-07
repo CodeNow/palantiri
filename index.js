@@ -8,7 +8,7 @@
 var App = require('./lib/app.js')
 var ErrorCat = require('error-cat')
 var error = new ErrorCat()
-var log = require('./lib/external/logger.js')(__filename)
+var log = require('./lib/external/logger.js')()
 
 var app = new App()
 app.start(function (err) {
