@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "NODE_ENV=test lab -vc -m 5000 ./test"
+    "lint": "standard --verbose",
+    "test": "npm run lint && NODE_ENV=test lab -vc -m 5000 ./test"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "code": "^1.5.0",
-    "lab": "^5.16.0"
+    "lab": "^5.16.0",
+    "standard": "^7.1.2"
   }
 }
