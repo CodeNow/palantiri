@@ -20,7 +20,7 @@
   "homepage": "https://github.com/CodeNow/palantiri#readme",
   "dependencies": {
     "101": "^1.0.0",
-    "@runnable/loki": "^1.1.5",
+    "@runnable/loki": "^1.1.6",
     "async": "^1.4.2",
     "bunyan": "^1.5.0",
     "callsite": "^1.0.0",
