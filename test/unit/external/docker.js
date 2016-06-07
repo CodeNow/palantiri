@@ -13,7 +13,6 @@ var expect = Code.expect
 
 var sinon = require('sinon')
 var str = require('string-to-stream')
-var fs = require('fs')
 
 var Docker = require('../../../lib/external/docker.js')
 
@@ -32,32 +31,6 @@ describe('docker.js unit test', function () {
     delete process.env.DOCKER_RETRY_INTERVAL
     done()
   })
-
-  describe('loadCerts', function () {
-    beforeEach(function (done) {
-      sinon.stub(fs, 'readFileSync')
-      done()
-    })
-
-    afterEach(function (done) {
-      fs.readFileSync.restore()
-      done()
-    })
-
-    it('should load certs', function (done) {
-      fs.readFileSync.returns()
-      Docker.loadCerts()
-
-      done()
-    })
-
-    it('should not load certs', function (done) {
-      fs.readFileSync.throws()
-      Docker.loadCerts()
-
-      done()
-    })
-  }) // end loadCerts
 
   describe('pullImage', function () {
     var testImage = 'runnable/libra'
