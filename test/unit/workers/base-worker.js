@@ -45,7 +45,7 @@ describe('base-worker.js unit test', function () {
       expect(function () {
         worker = new BaseWorker()
       }).to.throw()
-      expect(worker).to.exist()
+      expect(worker).to.not.exist()
       done()
     })
   }) // end constructor
