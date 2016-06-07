@@ -1,5 +1,7 @@
 # palantiri
 
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+
 ![Palantiri](http://3.bp.blogspot.com/-0LHUkeWt6A0/TpCy7N014UI/AAAAAAAAAbs/5EIMr-5nFaw/s1600/palantiri.jpg)
 
 ## Monitors health and sends out notifications of unhealthiness throughout the land
