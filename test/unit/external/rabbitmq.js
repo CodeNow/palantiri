@@ -1,273 +1,273 @@
-'use strict';
-require('loadenv')();
+'use strict'
+require('loadenv')()
 
-var Lab = require('lab');
-var lab = exports.lab = Lab.script();
-var describe = lab.describe;
-var it = lab.it;
-var afterEach = lab.afterEach;
-var beforeEach = lab.beforeEach;
-var Code = require('code');
-var expect = Code.expect;
+var Lab = require('lab')
+var lab = exports.lab = Lab.script()
+var describe = lab.describe
+var it = lab.it
+var afterEach = lab.afterEach
+var beforeEach = lab.beforeEach
+var Code = require('code')
+var expect = Code.expect
 
-var sinon = require('sinon');
-var hermesClient = require('runnable-hermes');
-var clone = require('101/clone');
+var sinon = require('sinon')
+var hermesClient = require('runnable-hermes')
+var clone = require('101/clone')
 
-var rabbitClient = require('../../../lib/external/rabbitmq.js');
+var rabbitClient = require('../../../lib/external/rabbitmq.js')
 
 describe('rabbitmq.js unit test', function () {
   describe('connect', function () {
-    var hermesMock;
+    var hermesMock
     beforeEach(function (done) {
       hermesMock = {
         connect: sinon.stub()
-      };
-      sinon.stub(hermesClient, 'hermesSingletonFactory').returns(hermesMock);
-      done();
-    });
+      }
+      sinon.stub(hermesClient, 'hermesSingletonFactory').returns(hermesMock)
+      done()
+    })
 
     afterEach(function (done) {
-      hermesClient.hermesSingletonFactory.restore();
-      done();
-    });
+      hermesClient.hermesSingletonFactory.restore()
+      done()
+    })
 
     it('should connect', function (done) {
-      hermesMock.connect.yieldsAsync();
+      hermesMock.connect.yieldsAsync()
 
       rabbitClient.connect(function (err) {
-        expect(err).to.not.exist();
-        done();
-      });
-    });
-  }); // end connect
+        expect(err).to.not.exist()
+        done()
+      })
+    })
+  }) // end connect
 
   describe('loadWorkers', function () {
     beforeEach(function (done) {
       rabbitClient.hermesClient = {
         subscribe: sinon.stub()
-      };
-      done();
-    });
+      }
+      done()
+    })
 
     it('should subscribe health-check', function (done) {
-      rabbitClient.hermesClient.subscribe.returns();
+      rabbitClient.hermesClient.subscribe.returns()
 
-      rabbitClient.loadWorkers();
+      rabbitClient.loadWorkers()
       expect(rabbitClient.hermesClient.subscribe
-        .withArgs('health-check').called).to.be.true();
-      done();
-    });
+        .withArgs('health-check').called).to.be.true()
+      done()
+    })
 
     it('should subscribe docker-health-check', function (done) {
-      rabbitClient.hermesClient.subscribe.returns();
+      rabbitClient.hermesClient.subscribe.returns()
 
-      rabbitClient.loadWorkers();
+      rabbitClient.loadWorkers()
       expect(rabbitClient.hermesClient.subscribe
-        .withArgs('docker-health-check').called).to.be.true();
-      done();
-    });
-  }); // end loadWorkers
+        .withArgs('docker-health-check').called).to.be.true()
+      done()
+    })
+  }) // end loadWorkers
 
   describe('unloadWorkers', function () {
     beforeEach(function (done) {
       rabbitClient.hermesClient = {
         unsubscribe: sinon.stub()
-      };
-      done();
-    });
+      }
+      done()
+    })
 
     it('should unsubscribe health-check', function (done) {
-      rabbitClient.hermesClient.unsubscribe.yieldsAsync();
+      rabbitClient.hermesClient.unsubscribe.yieldsAsync()
 
       rabbitClient.unloadWorkers(function (err) {
-        expect(err).to.not.exist();
+        expect(err).to.not.exist()
         expect(rabbitClient.hermesClient.unsubscribe
-          .withArgs('health-check').called).to.be.true();
-        done();
-      });
-    });
+          .withArgs('health-check').called).to.be.true()
+        done()
+      })
+    })
 
     it('should unsubscribe docker-health-check', function (done) {
-      rabbitClient.hermesClient.unsubscribe.yieldsAsync();
+      rabbitClient.hermesClient.unsubscribe.yieldsAsync()
 
       rabbitClient.unloadWorkers(function (err) {
-        expect(err).to.not.exist();
+        expect(err).to.not.exist()
         expect(rabbitClient.hermesClient.unsubscribe
-          .withArgs('docker-health-check').called).to.be.true();
-        done();
-      });
-    });
-  }); // end unloadWorkers
+          .withArgs('docker-health-check').called).to.be.true()
+        done()
+      })
+    })
+  }) // end unloadWorkers
 
   describe('close', function () {
     beforeEach(function (done) {
       rabbitClient.hermesClient = {
         close: sinon.stub()
-      };
-      done();
-    });
+      }
+      done()
+    })
 
     it('should close', function (done) {
-      rabbitClient.hermesClient.close.yieldsAsync();
+      rabbitClient.hermesClient.close.yieldsAsync()
 
       rabbitClient.close(function (err) {
-        expect(err).to.not.exist();
-        expect(rabbitClient.hermesClient).to.be.null();
-        done();
-      });
-    });
+        expect(err).to.not.exist()
+        expect(rabbitClient.hermesClient).to.be.null()
+        done()
+      })
+    })
 
     it('should not close if already closed', function (done) {
-      rabbitClient.hermesClient = null;
+      rabbitClient.hermesClient = null
 
       rabbitClient.close(function (err) {
-        expect(err).to.not.exist();
-        done();
-      });
-    });
-  }); // end close
+        expect(err).to.not.exist()
+        done()
+      })
+    })
+  }) // end close
 
   describe('publishHealthCheck', function () {
     beforeEach(function (done) {
       rabbitClient.hermesClient = {
         publish: sinon.stub()
-      };
-      done();
-    });
+      }
+      done()
+    })
 
     it('should publish health-check', function (done) {
-      rabbitClient.hermesClient.publish.returns();
+      rabbitClient.hermesClient.publish.returns()
 
-      rabbitClient.publishHealthCheck();
+      rabbitClient.publishHealthCheck()
 
       expect(rabbitClient.hermesClient.publish
-        .withArgs('health-check').called).to.be.true();
+        .withArgs('health-check').called).to.be.true()
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].timestamp).to.exist();
+        .args[0][1].timestamp).to.exist()
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].healthCheckId).to.exist();
-      done();
-    });
-  }); // end publishHealthCheck
+        .args[0][1].healthCheckId).to.exist()
+      done()
+    })
+  }) // end publishHealthCheck
 
   describe('publishDockerHealthCheck', function () {
     beforeEach(function (done) {
       rabbitClient.hermesClient = {
         publish: sinon.stub()
-      };
-      done();
-    });
+      }
+      done()
+    })
 
     it('should publish docker-health-check', function (done) {
       var testData = {
         dockerHost: 'testHost',
         githubId: 1253543
-      };
-      rabbitClient.hermesClient.publish.returns();
+      }
+      rabbitClient.hermesClient.publish.returns()
 
-      rabbitClient.publishDockerHealthCheck(testData);
+      rabbitClient.publishDockerHealthCheck(testData)
 
       expect(rabbitClient.hermesClient.publish
-        .withArgs('docker-health-check').called).to.be.true();
+        .withArgs('docker-health-check').called).to.be.true()
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].timestamp).to.exist();
+        .args[0][1].timestamp).to.exist()
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].dockerHealthCheckId).to.exist();
+        .args[0][1].dockerHealthCheckId).to.exist()
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].dockerHost).to.equal(testData.dockerHost);
+        .args[0][1].dockerHost).to.equal(testData.dockerHost)
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].githubId).to.equal(testData.githubId);
+        .args[0][1].githubId).to.equal(testData.githubId)
 
-      done();
-    });
+      done()
+    })
 
     it('should throw if missing keys', function (done) {
       var testData = {
         dockerHost: 'testHost',
         githubId: 1253543
-      };
+      }
 
       Object.keys(testData).forEach(function (key) {
-        var test = clone(testData);
-        delete test[key];
+        var test = clone(testData)
+        delete test[key]
         expect(function () {
-          rabbitClient.hermesClient.publishDockerHealthCheck(test);
-        }).to.throw();
-      });
+          rabbitClient.hermesClient.publishDockerHealthCheck(test)
+        }).to.throw()
+      })
 
-      done();
-    });
-  }); // end publishDockerHealthCheck
+      done()
+    })
+  }) // end publishDockerHealthCheck
 
   describe('publishOnDockUnhealthy', function () {
     beforeEach(function (done) {
       rabbitClient.hermesClient = {
         publish: sinon.stub()
-      };
-      done();
-    });
+      }
+      done()
+    })
 
     it('should publish on-dock-unhealthy', function (done) {
       var testData = {
         host: 'testHost',
         githubId: 1253543
-      };
-      rabbitClient.hermesClient.publish.returns();
+      }
+      rabbitClient.hermesClient.publish.returns()
 
-      rabbitClient.publishOnDockUnhealthy(testData);
+      rabbitClient.publishOnDockUnhealthy(testData)
 
       expect(rabbitClient.hermesClient.publish
-        .withArgs('on-dock-unhealthy').called).to.be.true();
+        .withArgs('on-dock-unhealthy').called).to.be.true()
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].timestamp).to.exist();
+        .args[0][1].timestamp).to.exist()
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].dockerHealthCheckId).to.exist();
+        .args[0][1].dockerHealthCheckId).to.exist()
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].host).to.equal(testData.host);
+        .args[0][1].host).to.equal(testData.host)
       expect(rabbitClient.hermesClient.publish
-        .args[0][1].githubId).to.equal(testData.githubId);
+        .args[0][1].githubId).to.equal(testData.githubId)
 
-      done();
-    });
+      done()
+    })
 
     it('should throw if missing keys', function (done) {
       var testData = {
         host: 'testHost',
         githubId: 1253543
-      };
+      }
 
       Object.keys(testData).forEach(function (key) {
-        var test = clone(testData);
-        delete test[key];
+        var test = clone(testData)
+        delete test[key]
         expect(function () {
-          rabbitClient.publishOnDockUnhealthy(test);
-        }).to.throw();
-      });
+          rabbitClient.publishOnDockUnhealthy(test)
+        }).to.throw()
+      })
 
-      done();
-    });
-  }); // end publishOnDockUnhealthy
+      done()
+    })
+  }) // end publishOnDockUnhealthy
 
   describe('_dataCheck', function () {
     it('should throw if missing keys', function (done) {
       var testData = {
-        summon: 'aeon',
-      };
+        summon: 'aeon'
+      }
       expect(function () {
-        rabbitClient.constructor._dataCheck(testData, ['summon', 'spell']);
-      }).to.throw();
+        rabbitClient.constructor._dataCheck(testData, ['summon', 'spell'])
+      }).to.throw()
 
-      done();
-    });
+      done()
+    })
 
     it('should return if keys present', function (done) {
       var testData = {
-        summon: 'aeon',
-      };
-      rabbitClient.constructor._dataCheck(testData, ['summon']);
+        summon: 'aeon'
+      }
+      rabbitClient.constructor._dataCheck(testData, ['summon'])
 
-      done();
-    });
-  }); // end _dataCheck
-});
+      done()
+    })
+  }) // end _dataCheck
+})

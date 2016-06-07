@@ -3,17 +3,17 @@
  * @module index
  */
 
-'use strict';
+'use strict'
 
-var App = require('./lib/app.js');
-var ErrorCat = require('error-cat');
-var error = new ErrorCat();
-var log = require('./lib/external/logger.js')(__filename);
+var App = require('./lib/app.js')
+var ErrorCat = require('error-cat')
+var error = new ErrorCat()
+var log = require('./lib/external/logger.js')(__filename)
 
-var app = new App();
+var app = new App()
 app.start(function (err) {
   if (err) {
-    error.wrap(err, 500, 'app exited');
+    error.wrap(err, 500, 'app exited')
   }
-  log.fatal(err, 'app exited');
-});
+  log.fatal(err, 'app exited')
+})
