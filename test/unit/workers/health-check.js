@@ -13,9 +13,9 @@ var expect = Code.expect
 
 var sinon = require('sinon')
 
-var HealthCheck = require('../../../lib/workers/health-check.js')
-var rabbitmq = require('../../../lib/external/rabbitmq.js')
-var mavisClient = require('../../../lib/external/mavis.js')
+var HealthCheck = require('../../../lib/workers/health-check')
+var rabbitmq = require('../../../lib/external/rabbitmq')
+var swarm = require('../../../lib/external/swarm')
 
 describe('health-check.js unit test', function () {
   var healthCheck
@@ -53,29 +53,35 @@ describe('health-check.js unit test', function () {
 
   describe('handle', function () {
     beforeEach(function (done) {
-      sinon.stub(mavisClient, 'getDocks')
-      sinon.stub(rabbitmq, 'publishDockerHealthCheck')
+      sinon.stub(swarm.prototype, 'getNodes')
+      sinon.stub(swarm.prototype, 'publishDockerHealthCheck')
       done()
     })
 
     afterEach(function (done) {
-      mavisClient.getDocks.restore()
+      swarm.prototype.getNodes.restore()
       rabbitmq.publishDockerHealthCheck.restore()
       done()
     })
 
     it('should call publishDockerHealthCheck for each host', function (done) {
       var testHosts = [{
-        host: 'host1',
-        tags: '11111,build,run'
+        Host: 'host1',
+        Labels: {
+          Org: '11111'
+        }
       }, {
-        host: 'host2',
-        tags: 'build,2222,run'
+        Host: 'host2',
+        Labels: {
+          Org: '2222'
+        }
       }, {
-        host: 'host3',
-        tags: 'run,build,3333'
+        Host: 'host3',
+        Labels: {
+          Org: '3333'
+        }
       }]
-      mavisClient.getDocks.yieldsAsync(null, testHosts)
+      swarm.prototype.getNodes.yieldsAsync(null, testHosts)
       rabbitmq.publishDockerHealthCheck.returns()
 
       healthCheck.handle(null, function (err) {
@@ -99,10 +105,10 @@ describe('health-check.js unit test', function () {
 
     it('should use default if no githubId', function (done) {
       var testHosts = [{
-        host: 'host1',
-        tags: 'notGithubId'
+        Host: 'host1',
+        Labels: {}
       }]
-      mavisClient.getDocks.yieldsAsync(null, testHosts)
+      swarm.prototype.getDocks.yieldsAsync(null, testHosts)
       rabbitmq.publishDockerHealthCheck.returns()
 
       healthCheck.handle(null, function (err) {
@@ -118,7 +124,7 @@ describe('health-check.js unit test', function () {
 
     it('should cb err', function (done) {
       var testErr = 'rock smash'
-      mavisClient.getDocks.yieldsAsync(testErr)
+      swarm.prototype.getDocks.yieldsAsync(testErr)
 
       healthCheck.handle(null, function (err) {
         expect(err).to.exist()
