@@ -64,7 +64,7 @@ describe('functional test', function () {
     dockerStub.logs.yieldsAsync(null, fakeStream)
 
     swarm.prototype.getNodes.yieldsAsync(null, [{
-      Host: 'http://localhost:4242',
+      Host: 'localhost:4242',
       Labels: {
         org: '1111'
       }
@@ -88,7 +88,7 @@ describe('functional test', function () {
     dockerStub.logs.yieldsAsync(null, fakeStream)
 
     swarm.prototype.getNodes.yieldsAsync(null, [{
-      Host: 'http://localhost:4242',
+      Host: 'localhost:4242',
       Labels: {
         org: '1111'
       }
@@ -148,7 +148,7 @@ describe('Unhealthy Test', function () {
     var testHost = 'http://localhost:4242'
 
     swarm.prototype.getNodes.yieldsAsync(null, [{
-      Host: 'http://localhost:4242',
+      Host: 'localhost:4242',
       Labels: {
         org: '1111'
       }
