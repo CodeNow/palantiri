@@ -54,7 +54,7 @@ describe('health-check.js unit test', function () {
   describe('handle', function () {
     beforeEach(function (done) {
       sinon.stub(swarm.prototype, 'getNodes')
-      sinon.stub(swarm.prototype, 'publishDockerHealthCheck')
+      sinon.stub(rabbitmq, 'publishDockerHealthCheck')
       done()
     })
 
@@ -68,17 +68,17 @@ describe('health-check.js unit test', function () {
       var testHosts = [{
         Host: 'host1',
         Labels: {
-          Org: '11111'
+          org: '11111'
         }
       }, {
         Host: 'host2',
         Labels: {
-          Org: '2222'
+          org: '2222'
         }
       }, {
         Host: 'host3',
         Labels: {
-          Org: '3333'
+          org: '3333'
         }
       }]
       swarm.prototype.getNodes.yieldsAsync(null, testHosts)
@@ -108,7 +108,7 @@ describe('health-check.js unit test', function () {
         Host: 'host1',
         Labels: {}
       }]
-      swarm.prototype.getDocks.yieldsAsync(null, testHosts)
+      swarm.prototype.getNodes.yieldsAsync(null, testHosts)
       rabbitmq.publishDockerHealthCheck.returns()
 
       healthCheck.handle(null, function (err) {
@@ -124,7 +124,7 @@ describe('health-check.js unit test', function () {
 
     it('should cb err', function (done) {
       var testErr = 'rock smash'
-      swarm.prototype.getDocks.yieldsAsync(testErr)
+      swarm.prototype.getNodes.yieldsAsync(testErr)
 
       healthCheck.handle(null, function (err) {
         expect(err).to.exist()
