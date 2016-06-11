@@ -12,8 +12,10 @@ var expect = Code.expect
 var ErrorCat = require('error-cat')
 
 var sinon = require('sinon')
+var Promise = require('bluebird')
+require('sinon-as-promised')(Promise)
 var Dockerode = require('dockerode')
-var request = require('requestretry')
+var swarm = require('../../lib/external/swarm')
 var rabbitClient = require('../../lib/external/rabbitmq.js')
 var App = require('../../lib/app.js')
 var Docker = require('../../lib/external/docker.js')
@@ -40,7 +42,7 @@ describe('functional test', function () {
     sinon.stub(ErrorCat.prototype, 'createAndReport')
     sinon.stub(Docker.prototype, 'pullImage')
       .yieldsAsync(null)
-    sinon.stub(request.Request, 'request')
+    sinon.stub(swarm.prototype, 'getNodes')
     app = new App()
     app.start(done)
   })
@@ -48,7 +50,7 @@ describe('functional test', function () {
   afterEach(function (done) {
     delete process.env.COLLECT_INTERVAL
     delete process.env.RSS_LIMIT
-    request.Request.request.restore()
+    swarm.prototype.getNodes.restore()
     Dockerode.prototype.createContainer.restore()
     Docker.prototype.pullImage.restore()
     ErrorCat.prototype.createAndReport.restore()
@@ -63,9 +65,11 @@ describe('functional test', function () {
     }
     dockerStub.logs.yieldsAsync(null, fakeStream)
 
-    request.Request.request.yieldsAsync(null, null, [{
-      host: 'http://localhost:4242',
-      tags: 'build,run,1111'
+    swarm.prototype.getNodes.resolves([{
+      Host: 'localhost:4242',
+      Labels: {
+        org: '1111'
+      }
     }])
     var interval = setInterval(function () {
       if (dockerStub.remove.called) {
@@ -77,7 +81,7 @@ describe('functional test', function () {
 
   it('should emit unhealthy event if dock unhealthy', function (done) {
     process.env.RSS_LIMIT = 1
-    var testHost = 'http://localhost:4242'
+    var testHost = 'https://localhost:4242'
     var fakeStream = {
       on: function (e, cb) {
         cb()
@@ -85,9 +89,11 @@ describe('functional test', function () {
     }
     dockerStub.logs.yieldsAsync(null, fakeStream)
 
-    request.Request.request.yieldsAsync(null, null, [{
-      host: testHost,
-      tags: 'build,run,1111'
+    swarm.prototype.getNodes.resolves([{
+      Host: 'localhost:4242',
+      Labels: {
+        org: '1111'
+      }
     }])
 
     rabbitClient.hermesClient.subscribe('on-dock-unhealthy', function (data, cb) {
@@ -125,7 +131,7 @@ describe('Unhealthy Test', function () {
     sinon.stub(ErrorCat.prototype, 'createAndReport')
     sinon.stub(Docker.prototype, 'pullImage')
       .yieldsAsync(null)
-    sinon.stub(request.Request, 'request')
+    sinon.stub(swarm.prototype, 'getNodes')
     app = new App()
     app.start(done)
   })
@@ -133,7 +139,7 @@ describe('Unhealthy Test', function () {
   afterEach(function (done) {
     delete process.env.COLLECT_INTERVAL
     delete process.env.RSS_LIMIT
-    request.Request.request.restore()
+    swarm.prototype.getNodes.restore()
     Dockerode.prototype.createContainer.restore()
     Docker.prototype.pullImage.restore()
     ErrorCat.prototype.createAndReport.restore()
@@ -141,11 +147,13 @@ describe('Unhealthy Test', function () {
   })
   it('should emit unhealthy if start fails with out of memory error', function (done) {
     process.env.RSS_LIMIT = 1
-    var testHost = 'http://localhost:4242'
+    var testHost = 'https://localhost:4242'
 
-    request.Request.request.yieldsAsync(null, null, [{
-      host: testHost,
-      tags: 'build,run,1111'
+    swarm.prototype.getNodes.resolves([{
+      Host: 'localhost:4242',
+      Labels: {
+        org: '1111'
+      }
     }])
 
     rabbitClient.hermesClient.subscribe('on-dock-unhealthy', function (data, cb) {
