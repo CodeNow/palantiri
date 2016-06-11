@@ -81,7 +81,7 @@ describe('functional test', function () {
 
   it('should emit unhealthy event if dock unhealthy', function (done) {
     process.env.RSS_LIMIT = 1
-    var testHost = 'http://localhost:4242'
+    var testHost = 'https://localhost:4242'
     var fakeStream = {
       on: function (e, cb) {
         cb()
@@ -147,7 +147,7 @@ describe('Unhealthy Test', function () {
   })
   it('should emit unhealthy if start fails with out of memory error', function (done) {
     process.env.RSS_LIMIT = 1
-    var testHost = 'http://localhost:4242'
+    var testHost = 'https://localhost:4242'
 
     swarm.prototype.getNodes.resolves([{
       Host: 'localhost:4242',

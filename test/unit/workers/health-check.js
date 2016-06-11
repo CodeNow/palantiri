@@ -89,15 +89,15 @@ describe('health-check.js unit test', function () {
       healthCheck.handle(null, function (err) {
         expect(err).to.not.exist()
         expect(rabbitmq.publishDockerHealthCheck.withArgs({
-          dockerHost: 'http://host1',
+          dockerHost: 'https://host1',
           githubId: 11111
         }).called).to.be.true()
         expect(rabbitmq.publishDockerHealthCheck.withArgs({
-          dockerHost: 'http://host2',
+          dockerHost: 'https://host2',
           githubId: 2222
         }).called).to.be.true()
         expect(rabbitmq.publishDockerHealthCheck.withArgs({
-          dockerHost: 'http://host3',
+          dockerHost: 'https://host3',
           githubId: 3333
         }).called).to.be.true()
 
@@ -116,7 +116,7 @@ describe('health-check.js unit test', function () {
       healthCheck.handle(null, function (err) {
         expect(err).to.not.exist()
         expect(rabbitmq.publishDockerHealthCheck.withArgs({
-          dockerHost: 'http://host1',
+          dockerHost: 'https://host1',
           githubId: 'default'
         }).called).to.be.true()
 
