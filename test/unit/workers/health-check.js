@@ -12,6 +12,8 @@ var Code = require('code')
 var expect = Code.expect
 
 var sinon = require('sinon')
+var Promise = require('bluebird')
+require('sinon-as-promised')(Promise)
 
 var HealthCheck = require('../../../lib/workers/health-check')
 var rabbitmq = require('../../../lib/external/rabbitmq')
@@ -81,7 +83,7 @@ describe('health-check.js unit test', function () {
           org: '3333'
         }
       }]
-      swarm.prototype.getNodes.yieldsAsync(null, testHosts)
+      swarm.prototype.getNodes.resolves(testHosts)
       rabbitmq.publishDockerHealthCheck.returns()
 
       healthCheck.handle(null, function (err) {
@@ -108,7 +110,7 @@ describe('health-check.js unit test', function () {
         Host: 'host1',
         Labels: {}
       }]
-      swarm.prototype.getNodes.yieldsAsync(null, testHosts)
+      swarm.prototype.getNodes.resolves(testHosts)
       rabbitmq.publishDockerHealthCheck.returns()
 
       healthCheck.handle(null, function (err) {
@@ -124,7 +126,7 @@ describe('health-check.js unit test', function () {
 
     it('should cb err', function (done) {
       var testErr = 'rock smash'
-      swarm.prototype.getNodes.yieldsAsync(testErr)
+      swarm.prototype.getNodes.rejects(testErr)
 
       healthCheck.handle(null, function (err) {
         expect(err).to.exist()

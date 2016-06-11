@@ -12,6 +12,8 @@ var expect = Code.expect
 var ErrorCat = require('error-cat')
 
 var sinon = require('sinon')
+var Promise = require('bluebird')
+require('sinon-as-promised')(Promise)
 var Dockerode = require('dockerode')
 var swarm = require('../../lib/external/swarm')
 var rabbitClient = require('../../lib/external/rabbitmq.js')
@@ -63,7 +65,7 @@ describe('functional test', function () {
     }
     dockerStub.logs.yieldsAsync(null, fakeStream)
 
-    swarm.prototype.getNodes.yieldsAsync(null, [{
+    swarm.prototype.getNodes.resolves([{
       Host: 'localhost:4242',
       Labels: {
         org: '1111'
@@ -87,7 +89,7 @@ describe('functional test', function () {
     }
     dockerStub.logs.yieldsAsync(null, fakeStream)
 
-    swarm.prototype.getNodes.yieldsAsync(null, [{
+    swarm.prototype.getNodes.resolves([{
       Host: 'localhost:4242',
       Labels: {
         org: '1111'
@@ -147,7 +149,7 @@ describe('Unhealthy Test', function () {
     process.env.RSS_LIMIT = 1
     var testHost = 'http://localhost:4242'
 
-    swarm.prototype.getNodes.yieldsAsync(null, [{
+    swarm.prototype.getNodes.resolves([{
       Host: 'localhost:4242',
       Labels: {
         org: '1111'
