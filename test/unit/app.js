@@ -14,6 +14,7 @@ var sinon = require('sinon')
 
 var rabbitClient = require('../../lib/external/rabbitmq.js')
 var App = require('../../lib/app.js')
+var ponosServer = require('../../lib/workers/server')
 
 describe('app.js unit test', function () {
   var app
@@ -91,12 +92,14 @@ describe('app.js unit test', function () {
     beforeEach(function (done) {
       sinon.stub(rabbitClient, 'unloadWorkers')
       sinon.stub(rabbitClient, 'close')
+      sinon.stub(ponosServer, 'stop')
       done()
     })
 
     afterEach(function (done) {
       rabbitClient.unloadWorkers.restore()
       rabbitClient.close.restore()
+      ponosServer.stop.restore()
       done()
     })
 
