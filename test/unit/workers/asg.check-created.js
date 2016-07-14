@@ -20,7 +20,7 @@ const TaskError = require('ponos').TaskError
 const TaskFatalError = require('ponos').TaskFatalError
 
 // internal (being tested)
-const CheckASGWasCreated = require('../../../lib/workers/asg-check-created')
+const CheckASGWasCreated = require('../../../lib/workers/asg.check-created')
 
 const assert = chai.assert
 chai.use(require('chai-as-promised'))
