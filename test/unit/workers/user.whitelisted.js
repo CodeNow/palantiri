@@ -24,14 +24,14 @@ require('sinon-as-promised')(require('bluebird'))
 
 describe('User Whitelisted Task', function () {
   describe('Joi validation', function () {
-    it('should fail if empty', function (done) {
+    it('should fail if empty', function () {
       return assert.isRejected(UserWhitelisted())
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
         })
     })
-    it('should fail missing createdAt', function (done) {
+    it('should fail missing createdAt', function () {
       return assert.isRejected(UserWhitelisted({
         githubId: 123213,
         orgName: 'asdasdasd'
@@ -41,7 +41,7 @@ describe('User Whitelisted Task', function () {
           assert.include(err.message, 'Invalid Job')
         })
     })
-    it('should fail missing githubId', function (done) {
+    it('should fail missing githubId', function () {
       return assert.isRejected(UserWhitelisted({
         createdAt: Math.floor(new Date().getTime() / 1000),
         orgName: 'asdasdasd'
@@ -51,7 +51,7 @@ describe('User Whitelisted Task', function () {
           assert.include(err.message, 'Invalid Job')
         })
     })
-    it('should fail missing orgName', function (done) {
+    it('should fail missing orgName', function () {
       return assert.isRejected(UserWhitelisted({
         createdAt: Math.floor(new Date().getTime() / 1000),
         githubId: 123213
@@ -74,7 +74,7 @@ describe('User Whitelisted Task', function () {
       done()
     })
 
-    it('should resolve successfully', function (done) {
+    it('should resolve successfully', function () {
       let job = {
         createdAt: Math.floor(new Date().getTime() / 1000) - 101,
         githubId: org,
