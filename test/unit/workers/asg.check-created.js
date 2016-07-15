@@ -39,14 +39,14 @@ describe('ASG Check Created Task', function () {
   })
 
   describe('Joi validation', function () {
-    it('should fail if empty', function (done) {
+    it('should fail if empty', function () {
       return assert.isRejected(CheckASGWasCreated())
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
         })
     })
-    it('should fail missing createdAt', function (done) {
+    it('should fail missing createdAt', function () {
       return assert.isRejected(CheckASGWasCreated({
         githubId: 123213,
         orgName: 'asdasdasd'
@@ -56,7 +56,7 @@ describe('ASG Check Created Task', function () {
           assert.include(err.message, 'Invalid Job')
         })
     })
-    it('should fail missing githubId', function (done) {
+    it('should fail missing githubId', function () {
       return assert.isRejected(CheckASGWasCreated({
         createdAt: Math.floor(new Date().getTime() / 1000),
         orgName: 'asdasdasd'
@@ -66,7 +66,7 @@ describe('ASG Check Created Task', function () {
           assert.include(err.message, 'Invalid Job')
         })
     })
-    it('should fail missing orgName', function (done) {
+    it('should fail missing orgName', function () {
       return assert.isRejected(CheckASGWasCreated({
         createdAt: Math.floor(new Date().getTime() / 1000),
         githubId: 123213
@@ -79,7 +79,7 @@ describe('ASG Check Created Task', function () {
   })
   describe('testing the delay', function () {
     process.env.CHECK_ASG_CREATED_DELAY_IN_SEC = 100
-    it('should throw TaskError when not enough time has passed ', function (done) {
+    it('should throw TaskError when not enough time has passed ', function () {
       return assert.isRejected(CheckASGWasCreated({
         createdAt: Math.floor(new Date().getTime() / 1000) + 100,
         githubId: 1232132,
@@ -105,14 +105,14 @@ describe('ASG Check Created Task', function () {
       done()
     })
 
-    it('should resolve successfully', function (done) {
+    it('should resolve successfully', function () {
       return CheckASGWasCreated({
         createdAt: Math.floor(new Date().getTime() / 1000) - 101,
         githubId: orgWithDock,
         orgName: 'asdasdasd'
       })
     })
-    it('should fire off a datadog when the org doesn\'t have a dock!', function (done) {
+    it('should fire off a datadog when the org doesn\'t have a dock!', function () {
       return assert.isRejected(CheckASGWasCreated({
         createdAt: Math.floor(new Date().getTime() / 1000) - 101,
         githubId: orgWithoutDock,
