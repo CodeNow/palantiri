@@ -44,6 +44,7 @@ describe('ASG Check Created Task', function () {
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
+          assert.match(err.message, /job.*required/i)
         })
     })
     it('should fail missing createdAt', function () {
@@ -54,6 +55,7 @@ describe('ASG Check Created Task', function () {
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
+          assert.match(err.message, /createdat.*required/i)
         })
     })
     it('should fail missing githubId', function () {
@@ -64,6 +66,7 @@ describe('ASG Check Created Task', function () {
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
+          assert.match(err.message, /githubid.*required/i)
         })
     })
     it('should fail missing orgName', function () {
@@ -74,6 +77,7 @@ describe('ASG Check Created Task', function () {
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
+          assert.match(err.message, /orgname.*required/i)
         })
     })
   })

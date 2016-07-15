@@ -29,6 +29,7 @@ describe('User Whitelisted Task', function () {
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
+          assert.match(err.message, /job.*required/i)
         })
     })
     it('should fail missing createdAt', function () {
@@ -39,6 +40,7 @@ describe('User Whitelisted Task', function () {
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
+          assert.match(err.message, /createdAt.*required/i)
         })
     })
     it('should fail missing githubId', function () {
@@ -49,6 +51,7 @@ describe('User Whitelisted Task', function () {
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
+          assert.match(err.message, /githubid.*required/i)
         })
     })
     it('should fail missing orgName', function () {
@@ -59,6 +62,7 @@ describe('User Whitelisted Task', function () {
         .then(function (err) {
           assert.instanceOf(err, TaskFatalError)
           assert.include(err.message, 'Invalid Job')
+          assert.match(err.message, /orgname.*required/i)
         })
     })
   })
