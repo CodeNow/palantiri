@@ -31,13 +31,21 @@ that way each <service>-health-check can gather information on number of service
 
 ![Palantiri Jobs](https://docs.google.com/drawings/d/1X1MnxYyfomGopq8cu7K9NxcNahNGomFH9585l9B5H_E/pub?w=846&h=427)
 
-##### health-check
+##### `health-check`
 Creates jobs per each service which require a health check.
 Currently creates a docker-health-check job per docker host
 
-##### docker-health-check
+##### `docker-health-check`
 Checks the health of a dock and publishes on-dock-unhealthy if checks fail
 required data: { host: 'http:localhost:4242', githubId: '23984567' }
+
+##### `user-whitelisted`
+Listens to the `user-whitelisted` event and publishes an `asg.check-created` job.
+
+##### `asg.check-crated`
+Makes sure an ASG was properly created for an organization (formerly a whitelisted 
+user). If that's not the case, it will send off a Pager Duty in order to let an
+engineer know about this.
 
 #### Server Workflow
 0. The server is started and subscribes to the relevant queues (see: `lib/app.js` and
