@@ -14,6 +14,7 @@ var sinon = require('sinon')
 
 var rabbitClient = require('../../lib/external/rabbitmq.js')
 var App = require('../../lib/app.js')
+var ponosServer = require('../../lib/workers/server')
 
 describe('app.js unit test', function () {
   var app
@@ -25,7 +26,6 @@ describe('app.js unit test', function () {
   describe('start', function () {
     beforeEach(function (done) {
       sinon.stub(rabbitClient, 'connect')
-      sinon.stub(rabbitClient, 'loadWorkers')
       sinon.stub(rabbitClient, 'publishHealthCheck')
       process.env.COLLECT_INTERVAL = 1
       done()
@@ -33,7 +33,6 @@ describe('app.js unit test', function () {
 
     afterEach(function (done) {
       rabbitClient.connect.restore()
-      rabbitClient.loadWorkers.restore()
       rabbitClient.publishHealthCheck.restore()
       delete process.env.COLLECT_INTERVAL
       if (app.interval) {
@@ -44,7 +43,6 @@ describe('app.js unit test', function () {
 
     it('should setup service', function (done) {
       rabbitClient.connect.yieldsAsync()
-      rabbitClient.loadWorkers.returns()
       rabbitClient.publishHealthCheck.returns()
 
       app.start(function (err) {
@@ -89,52 +87,33 @@ describe('app.js unit test', function () {
 
   describe('stop', function () {
     beforeEach(function (done) {
-      sinon.stub(rabbitClient, 'unloadWorkers')
       sinon.stub(rabbitClient, 'close')
+      sinon.stub(ponosServer, 'stop')
       done()
     })
 
     afterEach(function (done) {
-      rabbitClient.unloadWorkers.restore()
       rabbitClient.close.restore()
+      ponosServer.stop.restore()
       done()
     })
 
     it('should setup service', function (done) {
-      rabbitClient.unloadWorkers.yieldsAsync()
       rabbitClient.close.yieldsAsync()
 
       app.stop(function (err) {
         expect(err).to.not.exist()
-        expect(rabbitClient.unloadWorkers.called).to.be.true()
         expect(app.interval).to.not.exist()
-        done()
-      })
-    })
-
-    it('should not err if unloadWorkers failed', function (done) {
-      var testErr = 'flop'
-      rabbitClient.unloadWorkers.yieldsAsync(testErr)
-      rabbitClient.close.yieldsAsync()
-
-      app.stop(function (err) {
-        expect(err).to.not.exist()
-        expect(rabbitClient.unloadWorkers.called).to.be.true()
-        expect(rabbitClient.close.called).to.be.true()
-        expect(app.interval).to.not.exist()
-
         done()
       })
     })
 
     it('should not err if close failed', function (done) {
       var testErr = 'flop'
-      rabbitClient.unloadWorkers.yieldsAsync()
       rabbitClient.close.yieldsAsync(testErr)
 
       app.stop(function (err) {
         expect(err).to.not.exist()
-        expect(rabbitClient.unloadWorkers.called).to.be.true()
         expect(rabbitClient.close.called).to.be.true()
         expect(app.interval).to.not.exist()
 
@@ -143,11 +122,10 @@ describe('app.js unit test', function () {
     })
 
     it('should not throw on domain error', function (done) {
-      rabbitClient.unloadWorkers.throws()
+      rabbitClient.close.throws()
 
       app.stop(function (err) {
         expect(err).to.exist()
-        expect(rabbitClient.unloadWorkers.called).to.be.true()
         expect(app.interval).to.not.exist()
 
         done()

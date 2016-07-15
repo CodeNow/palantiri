@@ -57,4 +57,53 @@ describe('swarm unit test', () => {
       })
     })
   }) // end getNodes
+
+  describe('getHostsWithOrgs', function () {
+    beforeEach(function (done) {
+      const info = {
+        parsedSystemStatus: {
+          ParsedNodes: [
+            {
+              host: '127.0.0.1:4242',
+              Labels: {
+                org: 27081
+              }
+            }
+          ]
+        }
+      }
+      sinon.stub(SwarmClient.prototype, 'swarmInfoAsync').resolves(info)
+      done()
+    })
+
+    afterEach(function (done) {
+      SwarmClient.prototype.swarmInfoAsync.restore()
+      done()
+    })
+
+    it('should fail if swarmInfoAsync failed', function (done) {
+      SwarmClient.prototype.swarmInfoAsync.rejects(new Error('Swarm error'))
+      docker.getHostsWithOrgs()
+      .then(function () {
+        return done(new Error('Should never happen'))
+      })
+      .catch(function (err) {
+        expect(err.message).to.equal('Swarm error')
+        sinon.assert.calledOnce(SwarmClient.prototype.swarmInfoAsync)
+        done()
+      })
+    })
+
+    it('should succeed if swarmInfoAsync succeeded', function (done) {
+      docker.getHostsWithOrgs()
+      .tap(function (hosts) {
+        sinon.assert.calledOnce(SwarmClient.prototype.swarmInfoAsync)
+        console.log('aaaa', hosts)
+        expect(hosts.length).to.equal(1)
+        expect(hosts[0].host).to.equal('http://127.0.0.1:4242')
+        expect(hosts[0].org).to.equal('27081')
+      })
+      .asCallback(done)
+    })
+  })
 })

@@ -42,64 +42,6 @@ describe('rabbitmq.js unit test', function () {
     })
   }) // end connect
 
-  describe('loadWorkers', function () {
-    beforeEach(function (done) {
-      rabbitClient.hermesClient = {
-        subscribe: sinon.stub()
-      }
-      done()
-    })
-
-    it('should subscribe health-check', function (done) {
-      rabbitClient.hermesClient.subscribe.returns()
-
-      rabbitClient.loadWorkers()
-      expect(rabbitClient.hermesClient.subscribe
-        .withArgs('health-check').called).to.be.true()
-      done()
-    })
-
-    it('should subscribe docker-health-check', function (done) {
-      rabbitClient.hermesClient.subscribe.returns()
-
-      rabbitClient.loadWorkers()
-      expect(rabbitClient.hermesClient.subscribe
-        .withArgs('docker-health-check').called).to.be.true()
-      done()
-    })
-  }) // end loadWorkers
-
-  describe('unloadWorkers', function () {
-    beforeEach(function (done) {
-      rabbitClient.hermesClient = {
-        unsubscribe: sinon.stub()
-      }
-      done()
-    })
-
-    it('should unsubscribe health-check', function (done) {
-      rabbitClient.hermesClient.unsubscribe.yieldsAsync()
-
-      rabbitClient.unloadWorkers(function (err) {
-        expect(err).to.not.exist()
-        expect(rabbitClient.hermesClient.unsubscribe
-          .withArgs('health-check').called).to.be.true()
-        done()
-      })
-    })
-
-    it('should unsubscribe docker-health-check', function (done) {
-      rabbitClient.hermesClient.unsubscribe.yieldsAsync()
-
-      rabbitClient.unloadWorkers(function (err) {
-        expect(err).to.not.exist()
-        expect(rabbitClient.hermesClient.unsubscribe
-          .withArgs('docker-health-check').called).to.be.true()
-        done()
-      })
-    })
-  }) // end unloadWorkers
-
   describe('close', function () {
     beforeEach(function (done) {
       rabbitClient.hermesClient = {
