@@ -55,20 +55,15 @@ describe('functional test', function () {
     Dockerode.prototype.createContainer.restore()
     Docker.prototype.pullImage.restore()
     ErrorCat.report.restore()
-    app.stop(function (err) {
-      if (err) {
-        return done()
-      }
-      if (server) {
-        return server.stop().asCallback(done)
-      }
-      done()
-    })
+    done()
   })
 
   describe('health check', function () {
     beforeEach(function (done) {
       app.start(done)
+    })
+    afterEach(function (done) {
+      app.stop(done)
     })
     it('should run health check for docks', function (done) {
       var fakeStream = {
@@ -94,6 +89,14 @@ describe('functional test', function () {
   })
 
   describe('dock unhealthy', function () {
+    afterEach(function (done) {
+      app.stop(function (err) {
+        if (err) {
+          return done()
+        }
+        return server.stop().asCallback(done)
+      })
+    })
     it('should emit unhealthy event if dock unhealthy', function (done) {
       process.env.RSS_LIMIT = 1
       var testHost = 'https://localhost:4242'

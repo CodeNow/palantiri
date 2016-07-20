@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "lint": "standard --verbose",
-    "test": "npm run lint && NODE_ENV=test lab -vc -m 20000 ./test"
+    "test": "npm run lint && NODE_ENV=test lab -vc -m 7000 ./test"
   },
   "repository": {
     "type": "git",
