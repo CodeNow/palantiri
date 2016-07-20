@@ -428,13 +428,13 @@ describe('docker-health-check.js unit test', function () {
   describe('checkErrorForMemoryFailure', function () {
     beforeEach(function (done) {
       sinon.stub(rabbitmq, 'publishOnDockUnhealthy')
-      sinon.stub(ErrorCat.prototype, 'createAndReport')
+      sinon.stub(ErrorCat, 'report')
       done()
     })
 
     afterEach(function (done) {
       rabbitmq.publishOnDockUnhealthy.restore()
-      ErrorCat.prototype.createAndReport.restore()
+      ErrorCat.report.restore()
       done()
     })
     it('should publish dock unhealthy when cannot allocate memory', function (done) {
@@ -443,7 +443,7 @@ describe('docker-health-check.js unit test', function () {
       dockerHealthCheck.dockerHost = 'host'
       dockerHealthCheck.checkErrorForMemoryFailure(testError)
 
-      sinon.assert.calledOnce(ErrorCat.prototype.createAndReport, 503, testError.message, {
+      sinon.assert.calledOnce(ErrorCat.report, 503, testError.message, {
         dockerHost: 'host',
         githubId: 2134
       })
@@ -458,7 +458,7 @@ describe('docker-health-check.js unit test', function () {
       var testError = 'Error pulling image (latest) from docker.io/runnable/libra, Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot pop bottles'
       dockerHealthCheck.githubId = 2134
       dockerHealthCheck.dockerHost = 'host'
-      sinon.assert.notCalled(ErrorCat.prototype.createAndReport)
+      sinon.assert.notCalled(ErrorCat.report)
       dockerHealthCheck.checkErrorForMemoryFailure(testError)
 
       sinon.assert.notCalled(rabbitmq.publishOnDockUnhealthy)

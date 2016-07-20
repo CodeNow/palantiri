@@ -6,13 +6,11 @@ var Lab = require('lab')
 var lab = exports.lab = Lab.script()
 var describe = lab.describe
 var it = lab.it
-var afterEach = lab.afterEach
 var beforeEach = lab.beforeEach
 var Code = require('code')
 var expect = Code.expect
 
 var sinon = require('sinon')
-var error = require('error-cat')
 
 var BaseWorker = require('../../../lib/workers/base-worker.js')
 
@@ -54,12 +52,6 @@ describe('base-worker.js unit test', function () {
     beforeEach(function (done) {
       sinon.stub(baseWorker, 'handle')
       sinon.stub(baseWorker, 'isDataValid')
-      sinon.stub(error, 'create').returns()
-      done()
-    })
-
-    afterEach(function (done) {
-      error.create.restore()
       done()
     })
 
@@ -86,33 +78,6 @@ describe('base-worker.js unit test', function () {
 
       baseWorker.worker({}, function (err) {
         expect(err).to.not.exist()
-        done()
-      })
-    })
-
-    it('should error if data invalid', function (done) {
-      baseWorker.isDataValid.returns(false)
-
-      baseWorker.worker({}, function (err) {
-        expect(err).to.not.exist()
-        expect(error.create.called).to.be.true()
-        expect(baseWorker.handle.called).to.be.false()
-
-        done()
-      })
-    })
-
-    it('should error if handle throws', function (done) {
-      var testErr = 'force winds'
-      sinon.stub(baseWorker, 'handleDomainError').returns()
-      baseWorker.handle.throws(testErr)
-      baseWorker.isDataValid.returns(true)
-
-      baseWorker.worker({}, function (err) {
-        expect(err).to.not.exist()
-        expect(baseWorker.handleDomainError.args[0][0].name)
-          .to.equal(testErr)
-
         done()
       })
     })

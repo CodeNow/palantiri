@@ -11,114 +11,49 @@ var Code = require('code')
 var expect = Code.expect
 
 var sinon = require('sinon')
-var hermesClient = require('runnable-hermes')
 var clone = require('101/clone')
 
 var rabbitClient = require('../../../lib/external/rabbitmq.js')
 
 describe('rabbitmq.js unit test', function () {
-  describe('connect', function () {
-    var hermesMock
-    beforeEach(function (done) {
-      hermesMock = {
-        connect: sinon.stub()
-      }
-      sinon.stub(hermesClient, 'hermesSingletonFactory').returns(hermesMock)
-      done()
-    })
-
-    afterEach(function (done) {
-      hermesClient.hermesSingletonFactory.restore()
-      done()
-    })
-
-    it('should connect', function (done) {
-      hermesMock.connect.yieldsAsync()
-
-      rabbitClient.connect(function (err) {
-        expect(err).to.not.exist()
-        done()
-      })
-    })
-  }) // end connect
-
-  describe('close', function () {
-    beforeEach(function (done) {
-      rabbitClient.hermesClient = {
-        close: sinon.stub()
-      }
-      done()
-    })
-
-    it('should close', function (done) {
-      rabbitClient.hermesClient.close.yieldsAsync()
-
-      rabbitClient.close(function (err) {
-        expect(err).to.not.exist()
-        expect(rabbitClient.hermesClient).to.be.null()
-        done()
-      })
-    })
-
-    it('should not close if already closed', function (done) {
-      rabbitClient.hermesClient = null
-
-      rabbitClient.close(function (err) {
-        expect(err).to.not.exist()
-        done()
-      })
-    })
-  }) // end close
-
+  beforeEach(function (done) {
+    sinon.stub(rabbitClient, 'publishTask')
+    done()
+  })
+  afterEach(function (done) {
+    rabbitClient.publishTask.restore()
+    done()
+  })
   describe('publishHealthCheck', function () {
-    beforeEach(function (done) {
-      rabbitClient.hermesClient = {
-        publish: sinon.stub()
-      }
-      done()
-    })
-
     it('should publish health-check', function (done) {
-      rabbitClient.hermesClient.publish.returns()
-
       rabbitClient.publishHealthCheck()
-
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .withArgs('health-check').called).to.be.true()
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].timestamp).to.exist()
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].healthCheckId).to.exist()
       done()
     })
   }) // end publishHealthCheck
 
   describe('publishDockerHealthCheck', function () {
-    beforeEach(function (done) {
-      rabbitClient.hermesClient = {
-        publish: sinon.stub()
-      }
-      done()
-    })
-
     it('should publish docker-health-check', function (done) {
       var testData = {
         dockerHost: 'testHost',
         githubId: 1253543
       }
-      rabbitClient.hermesClient.publish.returns()
-
       rabbitClient.publishDockerHealthCheck(testData)
 
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .withArgs('docker-health-check').called).to.be.true()
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].timestamp).to.exist()
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].dockerHealthCheckId).to.exist()
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].dockerHost).to.equal(testData.dockerHost)
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].githubId).to.equal(testData.githubId)
 
       done()
@@ -134,7 +69,7 @@ describe('rabbitmq.js unit test', function () {
         var test = clone(testData)
         delete test[key]
         expect(function () {
-          rabbitClient.hermesClient.publishDockerHealthCheck(test)
+          rabbitClient.publishDockerHealthCheck(test)
         }).to.throw()
       })
 
@@ -143,31 +78,22 @@ describe('rabbitmq.js unit test', function () {
   }) // end publishDockerHealthCheck
 
   describe('publishOnDockUnhealthy', function () {
-    beforeEach(function (done) {
-      rabbitClient.hermesClient = {
-        publish: sinon.stub()
-      }
-      done()
-    })
-
     it('should publish on-dock-unhealthy', function (done) {
       var testData = {
         host: 'testHost',
         githubId: 1253543
       }
-      rabbitClient.hermesClient.publish.returns()
-
       rabbitClient.publishOnDockUnhealthy(testData)
 
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .withArgs('on-dock-unhealthy').called).to.be.true()
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].timestamp).to.exist()
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].dockerHealthCheckId).to.exist()
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].host).to.equal(testData.host)
-      expect(rabbitClient.hermesClient.publish
+      expect(rabbitClient.publishTask
         .args[0][1].githubId).to.equal(testData.githubId)
 
       done()
@@ -197,7 +123,7 @@ describe('rabbitmq.js unit test', function () {
         summon: 'aeon'
       }
       expect(function () {
-        rabbitClient.constructor._dataCheck(testData, ['summon', 'spell'])
+        rabbitClient._dataCheck(testData, ['summon', 'spell'])
       }).to.throw()
 
       done()
@@ -207,7 +133,7 @@ describe('rabbitmq.js unit test', function () {
       var testData = {
         summon: 'aeon'
       }
-      rabbitClient.constructor._dataCheck(testData, ['summon'])
+      rabbitClient._dataCheck(testData, ['summon'])
 
       done()
     })

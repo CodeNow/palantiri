@@ -98,7 +98,6 @@ describe('swarm unit test', () => {
       docker.getHostsWithOrgs()
       .tap(function (hosts) {
         sinon.assert.calledOnce(SwarmClient.prototype.swarmInfoAsync)
-        console.log('aaaa', hosts)
         expect(hosts.length).to.equal(1)
         expect(hosts[0].host).to.equal('http://127.0.0.1:4242')
         expect(hosts[0].org).to.equal('27081')

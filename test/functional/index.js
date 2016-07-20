@@ -16,13 +16,14 @@ var Promise = require('bluebird')
 require('sinon-as-promised')(Promise)
 var Dockerode = require('dockerode')
 var swarm = require('../../lib/external/swarm')
-var rabbitClient = require('../../lib/external/rabbitmq.js')
+const ponos = require('ponos')
 var App = require('../../lib/app.js')
 var Docker = require('../../lib/external/docker.js')
 
 describe('functional test', function () {
   var app
   var dockerStub
+  var server
 
   beforeEach(function (done) {
     process.env.COLLECT_INTERVAL = 100000
@@ -39,12 +40,12 @@ describe('functional test', function () {
     }
     sinon.stub(Dockerode.prototype, 'createContainer')
       .yieldsAsync(null, dockerStub)
-    sinon.stub(ErrorCat.prototype, 'createAndReport')
+    sinon.stub(ErrorCat, 'report')
     sinon.stub(Docker.prototype, 'pullImage')
       .yieldsAsync(null)
     sinon.stub(swarm.prototype, 'getNodes')
     app = new App()
-    app.start(done)
+    done()
   })
 
   afterEach(function (done) {
@@ -53,53 +54,31 @@ describe('functional test', function () {
     swarm.prototype.getNodes.restore()
     Dockerode.prototype.createContainer.restore()
     Docker.prototype.pullImage.restore()
-    ErrorCat.prototype.createAndReport.restore()
-    app.stop(done)
+    ErrorCat.report.restore()
+    done()
   })
 
-  it('should run health check for docks', function (done) {
-    var fakeStream = {
-      on: function (e, cb) {
-        cb()
+  describe('health check', function () {
+    beforeEach(function (done) {
+      app.start(done)
+    })
+    afterEach(function (done) {
+      app.stop(done)
+    })
+    it('should run health check for docks', function (done) {
+      var fakeStream = {
+        on: function (e, cb) {
+          cb()
+        }
       }
-    }
-    dockerStub.logs.yieldsAsync(null, fakeStream)
+      dockerStub.logs.yieldsAsync(null, fakeStream)
 
-    swarm.prototype.getNodes.resolves([{
-      Host: 'localhost:4242',
-      Labels: {
-        org: '1111'
-      }
-    }])
-    var interval = setInterval(function () {
-      if (dockerStub.remove.called) {
-        clearInterval(interval)
-        done()
-      }
-    }, 15)
-  })
-
-  it('should emit unhealthy event if dock unhealthy', function (done) {
-    process.env.RSS_LIMIT = 1
-    var testHost = 'https://localhost:4242'
-    var fakeStream = {
-      on: function (e, cb) {
-        cb()
-      }
-    }
-    dockerStub.logs.yieldsAsync(null, fakeStream)
-
-    swarm.prototype.getNodes.resolves([{
-      Host: 'localhost:4242',
-      Labels: {
-        org: '1111'
-      }
-    }])
-
-    rabbitClient.hermesClient.subscribe('on-dock-unhealthy', function (data, cb) {
-      cb()
-      expect(data.host).to.equal(testHost)
-      expect(data.githubId).to.equal(1111)
+      swarm.prototype.getNodes.resolves([{
+        Host: 'localhost:4242',
+        Labels: {
+          org: '1111'
+        }
+      }])
       var interval = setInterval(function () {
         if (dockerStub.remove.called) {
           clearInterval(interval)
@@ -108,11 +87,58 @@ describe('functional test', function () {
       }, 15)
     })
   })
+
+  describe('dock unhealthy', function () {
+    afterEach(function (done) {
+      app.stop(function (err) {
+        if (err) {
+          return done()
+        }
+        return server.stop().asCallback(done)
+      })
+    })
+    it('should emit unhealthy event if dock unhealthy', function (done) {
+      process.env.RSS_LIMIT = 1
+      var testHost = 'https://localhost:4242'
+      var fakeStream = {
+        on: function (e, cb) {
+          cb()
+        }
+      }
+      dockerStub.logs.yieldsAsync(null, fakeStream)
+
+      swarm.prototype.getNodes.resolves([{
+        Host: 'localhost:4242',
+        Labels: {
+          org: '1111'
+        }
+      }])
+      server = new ponos.Server({
+        tasks: {
+          'on-dock-unhealthy': (job) => {
+            expect(job.host).to.equal(testHost)
+            expect(job.githubId).to.equal(1111)
+            var interval = setInterval(function () {
+              if (dockerStub.remove.called) {
+                clearInterval(interval)
+                done()
+              }
+            }, 15)
+            return Promise.resolve(job)
+          }
+        }
+      })
+      server.start().then(function () {
+        app.start()
+      })
+    })
+  })
 })
 
 describe('Unhealthy Test', function () {
   var dockerStub
   var app
+  var server
   beforeEach(function (done) {
     process.env.COLLECT_INTERVAL = 100000
     process.env.RSS_LIMIT = 2000
@@ -128,7 +154,7 @@ describe('Unhealthy Test', function () {
     }
     sinon.stub(Dockerode.prototype, 'createContainer')
       .yieldsAsync(null, dockerStub)
-    sinon.stub(ErrorCat.prototype, 'createAndReport')
+    sinon.stub(ErrorCat, 'report')
     sinon.stub(Docker.prototype, 'pullImage')
       .yieldsAsync(null)
     sinon.stub(swarm.prototype, 'getNodes')
@@ -142,10 +168,26 @@ describe('Unhealthy Test', function () {
     swarm.prototype.getNodes.restore()
     Dockerode.prototype.createContainer.restore()
     Docker.prototype.pullImage.restore()
-    ErrorCat.prototype.createAndReport.restore()
-    app.stop(done)
+    ErrorCat.report.restore()
+    app.stop(function (err) {
+      if (err) {
+        return done()
+      }
+      server.stop().asCallback(done)
+    })
   })
   it('should emit unhealthy if start fails with out of memory error', function (done) {
+    server = new ponos.Server({
+      tasks: {
+        'on-dock-unhealthy': (job) => {
+          expect(job.host).to.equal(testHost)
+          expect(job.githubId).to.equal(1111)
+          Promise.resolve(job)
+          done()
+        }
+      }
+    })
+    server.start()
     process.env.RSS_LIMIT = 1
     var testHost = 'https://localhost:4242'
 
@@ -155,12 +197,5 @@ describe('Unhealthy Test', function () {
         org: '1111'
       }
     }])
-
-    rabbitClient.hermesClient.subscribe('on-dock-unhealthy', function (data, cb) {
-      cb()
-      expect(data.host).to.equal(testHost)
-      expect(data.githubId).to.equal(1111)
-      done()
-    })
   })
 })
