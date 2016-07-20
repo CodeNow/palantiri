@@ -23,6 +23,7 @@ var Docker = require('../../lib/external/docker.js')
 describe('functional test', function () {
   var app
   var dockerStub
+  var server
 
   beforeEach(function (done) {
     process.env.COLLECT_INTERVAL = 100000
@@ -54,7 +55,15 @@ describe('functional test', function () {
     Dockerode.prototype.createContainer.restore()
     Docker.prototype.pullImage.restore()
     ErrorCat.report.restore()
-    app.stop(done)
+    app.stop(function (err) {
+      if (err) {
+        return done()
+      }
+      if (server) {
+        return server.stop().asCallback(done)
+      }
+      done()
+    })
   })
 
   it('should run health check for docks', function (done) {
@@ -80,6 +89,22 @@ describe('functional test', function () {
   })
 
   it('should emit unhealthy event if dock unhealthy', function (done) {
+    server = new ponos.Server({
+      tasks: {
+        'on-dock-unhealthy': (job) => {
+          expect(job.host).to.equal(testHost)
+          expect(job.githubId).to.equal(1111)
+          var interval = setInterval(function () {
+            if (dockerStub.remove.called) {
+              clearInterval(interval)
+              done()
+            }
+          }, 15)
+          return Promise.resolve(job)
+        }
+      }
+    })
+    server.start()
     process.env.RSS_LIMIT = 1
     var testHost = 'https://localhost:4242'
     var fakeStream = {
@@ -95,28 +120,13 @@ describe('functional test', function () {
         org: '1111'
       }
     }])
-    const server = new ponos.Server({
-      tasks: {
-        'on-dock-unhealthy': (job) => {
-          expect(job.host).to.equal(testHost)
-          expect(job.githubId).to.equal(1111)
-          var interval = setInterval(function () {
-            if (dockerStub.remove.called) {
-              clearInterval(interval)
-              server.stop().asCallback(done)
-            }
-          }, 15)
-          return Promise.resolve(job)
-        }
-      }
-    })
-    server.start()
   })
 })
 
 describe('Unhealthy Test', function () {
   var dockerStub
   var app
+  var server
   beforeEach(function (done) {
     process.env.COLLECT_INTERVAL = 100000
     process.env.RSS_LIMIT = 2000
@@ -147,9 +157,25 @@ describe('Unhealthy Test', function () {
     Dockerode.prototype.createContainer.restore()
     Docker.prototype.pullImage.restore()
     ErrorCat.report.restore()
-    app.stop(done)
+    app.stop(function (err) {
+      if (err) {
+        return done()
+      }
+      server.stop().asCallback(done)
+    })
   })
   it('should emit unhealthy if start fails with out of memory error', function (done) {
+    server = new ponos.Server({
+      tasks: {
+        'on-dock-unhealthy': (job) => {
+          expect(job.host).to.equal(testHost)
+          expect(job.githubId).to.equal(1111)
+          Promise.resolve(job)
+          done()
+        }
+      }
+    })
+    server.start()
     process.env.RSS_LIMIT = 1
     var testHost = 'https://localhost:4242'
 
@@ -159,16 +185,5 @@ describe('Unhealthy Test', function () {
         org: '1111'
       }
     }])
-    const server = new ponos.Server({
-      tasks: {
-        'on-dock-unhealthy': (job) => {
-          expect(job.host).to.equal(testHost)
-          expect(job.githubId).to.equal(1111)
-          Promise.resolve(job)
-          server.stop().asCallback(done)
-        }
-      }
-    })
-    server.start()
   })
 })
