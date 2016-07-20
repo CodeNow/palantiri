@@ -5,15 +5,18 @@
 
 'use strict'
 
-var App = require('./lib/app.js')
-var ErrorCat = require('error-cat')
-var error = new ErrorCat()
-var log = require('./lib/external/logger.js')()
+const App = require('./lib/app.js')
+const CriticalError = require('error-cat/errors/critical-error')
+const ErrorCat = require('error-cat')
+const log = require('./lib/external/logger.js')()
 
-var app = new App()
+const app = new App()
 app.start(function (err) {
   if (err) {
-    error.wrap(err, 500, 'app exited')
+    ErrorCat.report(new CriticalError(
+      'server failed to start',
+      { err: err }
+    ))
   }
   log.fatal(err, 'app exited')
 })

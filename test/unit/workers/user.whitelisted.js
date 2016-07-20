@@ -12,7 +12,7 @@ var beforeEach = lab.beforeEach
 const sinon = require('sinon')
 const chai = require('chai')
 
-const TaskFatalError = require('ponos').TaskFatalError
+const WorkerStopError = require('error-cat/errors/worker-stop-error')
 const rabbitmq = require('../../../lib/external/rabbitmq')
 
 // internal (being tested)
@@ -27,7 +27,7 @@ describe('User Whitelisted Task', function () {
     it('should fail if empty', function () {
       return assert.isRejected(UserWhitelisted())
         .then(function (err) {
-          assert.instanceOf(err, TaskFatalError)
+          assert.instanceOf(err, WorkerStopError)
           assert.include(err.message, 'Invalid Job')
           assert.match(err.message, /job.*required/i)
         })
@@ -38,7 +38,7 @@ describe('User Whitelisted Task', function () {
         orgName: 'asdasdasd'
       }))
         .then(function (err) {
-          assert.instanceOf(err, TaskFatalError)
+          assert.instanceOf(err, WorkerStopError)
           assert.include(err.message, 'Invalid Job')
           assert.match(err.message, /createdAt.*required/i)
         })
@@ -49,7 +49,7 @@ describe('User Whitelisted Task', function () {
         orgName: 'asdasdasd'
       }))
         .then(function (err) {
-          assert.instanceOf(err, TaskFatalError)
+          assert.instanceOf(err, WorkerStopError)
           assert.include(err.message, 'Invalid Job')
           assert.match(err.message, /githubid.*required/i)
         })
@@ -60,7 +60,7 @@ describe('User Whitelisted Task', function () {
         githubId: 123213
       }))
         .then(function (err) {
-          assert.instanceOf(err, TaskFatalError)
+          assert.instanceOf(err, WorkerStopError)
           assert.include(err.message, 'Invalid Job')
           assert.match(err.message, /orgname.*required/i)
         })

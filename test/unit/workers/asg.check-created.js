@@ -1,6 +1,6 @@
 'use strict'
 
-require('loadenv')({ debugName: 'khronos:test' })
+require('loadenv')({ debugName: 'palantiri:test' })
 
 var Lab = require('lab')
 var lab = exports.lab = Lab.script()
@@ -16,8 +16,8 @@ const sinon = require('sinon')
 
 // Internal
 const Swarm = require('../../../lib/external/swarm')
-const TaskError = require('ponos').TaskError
-const TaskFatalError = require('ponos').TaskFatalError
+const WorkerError = require('error-cat/errors/worker-error')
+const WorkerStopError = require('error-cat/errors/worker-stop-error')
 
 // internal (being tested)
 const CheckASGWasCreated = require('../../../lib/workers/asg.check-created')
@@ -42,7 +42,7 @@ describe('ASG Check Created Task', function () {
     it('should fail if empty', function () {
       return assert.isRejected(CheckASGWasCreated())
         .then(function (err) {
-          assert.instanceOf(err, TaskFatalError)
+          assert.instanceOf(err, WorkerStopError)
           assert.include(err.message, 'Invalid Job')
           assert.match(err.message, /job.*required/i)
         })
@@ -53,7 +53,7 @@ describe('ASG Check Created Task', function () {
         orgName: 'asdasdasd'
       }))
         .then(function (err) {
-          assert.instanceOf(err, TaskFatalError)
+          assert.instanceOf(err, WorkerStopError)
           assert.include(err.message, 'Invalid Job')
           assert.match(err.message, /createdat.*required/i)
         })
@@ -64,7 +64,7 @@ describe('ASG Check Created Task', function () {
         orgName: 'asdasdasd'
       }))
         .then(function (err) {
-          assert.instanceOf(err, TaskFatalError)
+          assert.instanceOf(err, WorkerStopError)
           assert.include(err.message, 'Invalid Job')
           assert.match(err.message, /githubid.*required/i)
         })
@@ -75,7 +75,7 @@ describe('ASG Check Created Task', function () {
         githubId: 123213
       }))
         .then(function (err) {
-          assert.instanceOf(err, TaskFatalError)
+          assert.instanceOf(err, WorkerStopError)
           assert.include(err.message, 'Invalid Job')
           assert.match(err.message, /orgname.*required/i)
         })
@@ -83,14 +83,14 @@ describe('ASG Check Created Task', function () {
   })
   describe('testing the delay', function () {
     process.env.CHECK_ASG_CREATED_DELAY_IN_SEC = 100
-    it('should throw TaskError when not enough time has passed ', function () {
+    it('should throw WorkerError when not enough time has passed ', function () {
       return assert.isRejected(CheckASGWasCreated({
         createdAt: Math.floor(new Date().getTime() / 1000) + 100,
         githubId: 1232132,
         orgName: 'asdasdasd'
       }))
         .then(function (err) {
-          assert.instanceOf(err, TaskError)
+          assert.instanceOf(err, WorkerError)
           assert.include(err.message, 'still needs to wait')
         })
     })
@@ -123,7 +123,7 @@ describe('ASG Check Created Task', function () {
         orgName: 'asdasdasd'
       }))
         .then(function (err) {
-          assert.instanceOf(err, TaskError)
+          assert.instanceOf(err, WorkerError)
           sinon.assert.calledOnce(monitor.event)
         })
     })
