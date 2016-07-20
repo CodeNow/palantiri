@@ -45,7 +45,7 @@ describe('functional test', function () {
       .yieldsAsync(null)
     sinon.stub(swarm.prototype, 'getNodes')
     app = new App()
-    app.start(done)
+    done()
   })
 
   afterEach(function (done) {
@@ -66,60 +66,69 @@ describe('functional test', function () {
     })
   })
 
-  it('should run health check for docks', function (done) {
-    var fakeStream = {
-      on: function (e, cb) {
-        cb()
-      }
-    }
-    dockerStub.logs.yieldsAsync(null, fakeStream)
-
-    swarm.prototype.getNodes.resolves([{
-      Host: 'localhost:4242',
-      Labels: {
-        org: '1111'
-      }
-    }])
-    var interval = setInterval(function () {
-      if (dockerStub.remove.called) {
-        clearInterval(interval)
-        done()
-      }
-    }, 15)
-  })
-
-  it('should emit unhealthy event if dock unhealthy', function (done) {
-    server = new ponos.Server({
-      tasks: {
-        'on-dock-unhealthy': (job) => {
-          expect(job.host).to.equal(testHost)
-          expect(job.githubId).to.equal(1111)
-          var interval = setInterval(function () {
-            if (dockerStub.remove.called) {
-              clearInterval(interval)
-              done()
-            }
-          }, 15)
-          return Promise.resolve(job)
+  describe('health check', function () {
+    beforeEach(function (done) {
+      app.start(done)
+    })
+    it('should run health check for docks', function (done) {
+      var fakeStream = {
+        on: function (e, cb) {
+          cb()
         }
       }
-    })
-    server.start()
-    process.env.RSS_LIMIT = 1
-    var testHost = 'https://localhost:4242'
-    var fakeStream = {
-      on: function (e, cb) {
-        cb()
-      }
-    }
-    dockerStub.logs.yieldsAsync(null, fakeStream)
+      dockerStub.logs.yieldsAsync(null, fakeStream)
 
-    swarm.prototype.getNodes.resolves([{
-      Host: 'localhost:4242',
-      Labels: {
-        org: '1111'
+      swarm.prototype.getNodes.resolves([{
+        Host: 'localhost:4242',
+        Labels: {
+          org: '1111'
+        }
+      }])
+      var interval = setInterval(function () {
+        if (dockerStub.remove.called) {
+          clearInterval(interval)
+          done()
+        }
+      }, 15)
+    })
+  })
+
+  describe('dock unhealthy', function () {
+    it('should emit unhealthy event if dock unhealthy', function (done) {
+      process.env.RSS_LIMIT = 1
+      var testHost = 'https://localhost:4242'
+      var fakeStream = {
+        on: function (e, cb) {
+          cb()
+        }
       }
-    }])
+      dockerStub.logs.yieldsAsync(null, fakeStream)
+
+      swarm.prototype.getNodes.resolves([{
+        Host: 'localhost:4242',
+        Labels: {
+          org: '1111'
+        }
+      }])
+      server = new ponos.Server({
+        tasks: {
+          'on-dock-unhealthy': (job) => {
+            expect(job.host).to.equal(testHost)
+            expect(job.githubId).to.equal(1111)
+            var interval = setInterval(function () {
+              if (dockerStub.remove.called) {
+                clearInterval(interval)
+                done()
+              }
+            }, 15)
+            return Promise.resolve(job)
+          }
+        }
+      })
+      server.start().then(function () {
+        app.start()
+      })
+    })
   })
 })
 
