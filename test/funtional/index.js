@@ -39,7 +39,7 @@ describe('functional test', function () {
     }
     sinon.stub(Dockerode.prototype, 'createContainer')
       .yieldsAsync(null, dockerStub)
-    sinon.stub(ErrorCat.prototype, 'createAndReport')
+    sinon.stub(ErrorCat, 'report')
     sinon.stub(Docker.prototype, 'pullImage')
       .yieldsAsync(null)
     sinon.stub(swarm.prototype, 'getNodes')
@@ -53,7 +53,7 @@ describe('functional test', function () {
     swarm.prototype.getNodes.restore()
     Dockerode.prototype.createContainer.restore()
     Docker.prototype.pullImage.restore()
-    ErrorCat.prototype.createAndReport.restore()
+    ErrorCat.report.restore()
     app.stop(done)
   })
 
@@ -128,7 +128,7 @@ describe('Unhealthy Test', function () {
     }
     sinon.stub(Dockerode.prototype, 'createContainer')
       .yieldsAsync(null, dockerStub)
-    sinon.stub(ErrorCat.prototype, 'createAndReport')
+    sinon.stub(ErrorCat, 'report')
     sinon.stub(Docker.prototype, 'pullImage')
       .yieldsAsync(null)
     sinon.stub(swarm.prototype, 'getNodes')
@@ -142,7 +142,7 @@ describe('Unhealthy Test', function () {
     swarm.prototype.getNodes.restore()
     Dockerode.prototype.createContainer.restore()
     Docker.prototype.pullImage.restore()
-    ErrorCat.prototype.createAndReport.restore()
+    ErrorCat.report.restore()
     app.stop(done)
   })
   it('should emit unhealthy if start fails with out of memory error', function (done) {
