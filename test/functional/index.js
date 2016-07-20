@@ -16,7 +16,7 @@ var Promise = require('bluebird')
 require('sinon-as-promised')(Promise)
 var Dockerode = require('dockerode')
 var swarm = require('../../lib/external/swarm')
-var rabbitClient = require('../../lib/external/rabbitmq.js')
+const ponos = require('ponos')
 var App = require('../../lib/app.js')
 var Docker = require('../../lib/external/docker.js')
 
@@ -95,18 +95,22 @@ describe('functional test', function () {
         org: '1111'
       }
     }])
-
-    rabbitClient.hermesClient.subscribe('on-dock-unhealthy', function (data, cb) {
-      cb()
-      expect(data.host).to.equal(testHost)
-      expect(data.githubId).to.equal(1111)
-      var interval = setInterval(function () {
-        if (dockerStub.remove.called) {
-          clearInterval(interval)
-          done()
+    const server = new ponos.Server({
+      tasks: {
+        'on-dock-unhealthy': (job) => {
+          expect(job.host).to.equal(testHost)
+          expect(job.githubId).to.equal(1111)
+          var interval = setInterval(function () {
+            if (dockerStub.remove.called) {
+              clearInterval(interval)
+              server.stop().asCallback(done)
+            }
+          }, 15)
+          return Promise.resolve(job)
         }
-      }, 15)
+      }
     })
+    server.start()
   })
 })
 
@@ -155,12 +159,16 @@ describe('Unhealthy Test', function () {
         org: '1111'
       }
     }])
-
-    rabbitClient.hermesClient.subscribe('on-dock-unhealthy', function (data, cb) {
-      cb()
-      expect(data.host).to.equal(testHost)
-      expect(data.githubId).to.equal(1111)
-      done()
+    const server = new ponos.Server({
+      tasks: {
+        'on-dock-unhealthy': (job) => {
+          expect(job.host).to.equal(testHost)
+          expect(job.githubId).to.equal(1111)
+          Promise.resolve(job)
+          server.stop().asCallback(done)
+        }
+      }
     })
+    server.start()
   })
 })
