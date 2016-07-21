@@ -83,7 +83,7 @@ describe('docker-health-check.js unit test', function () {
   })
 
   it('should fail if githubId is not a number', function (done) {
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 'anton' })
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: {} })
     .then(function () {
       done(new Error('Should never happen'))
     })
