@@ -50,7 +50,7 @@ describe('docker.js unit test', function () {
       docker.client.pull.yieldsAsync(null, testStream)
       docker.client.modem.followProgress.yieldsAsync(null)
 
-      docker.pullImage(testImage, function (err) {
+      docker.pullImage(testImage).asCallback(function (err) {
         expect(err).to.not.exist()
         expect(docker.client.pull
           .withArgs(testImage).calledOnce).to.be.true()
@@ -67,7 +67,7 @@ describe('docker.js unit test', function () {
       docker.client.pull.onCall(1).yieldsAsync(null, testStream)
       docker.client.modem.followProgress.yieldsAsync(null)
 
-      docker.pullImage(testImage, function (err) {
+      docker.pullImage(testImage).asCallback(function (err) {
         expect(err).to.not.exist()
         expect(docker.client.pull
           .withArgs(testImage).calledTwice).to.be.true()
@@ -84,7 +84,7 @@ describe('docker.js unit test', function () {
       docker.client.modem.followProgress.onCall(0).yieldsAsync('error')
       docker.client.modem.followProgress.onCall(1).yieldsAsync(null)
 
-      docker.pullImage(testImage, function (err) {
+      docker.pullImage(testImage).asCallback(function (err) {
         expect(err).to.not.exist()
         expect(docker.client.pull
           .withArgs(testImage).calledTwice).to.be.true()
@@ -99,8 +99,8 @@ describe('docker.js unit test', function () {
       var testError = 'explode'
       docker.client.pull.onCall(0).yieldsAsync(testError)
       docker.client.pull.onCall(1).yieldsAsync(testError)
-      docker.pullImage(testImage, function (err) {
-        expect(err).to.equal(testError)
+      docker.pullImage(testImage).asCallback(function (err) {
+        expect(err.message).to.equal(testError)
         expect(docker.client.pull.withArgs(testImage).calledTwice).to.be.true()
 
         done()
@@ -123,7 +123,7 @@ describe('docker.js unit test', function () {
       var testRes = 'thisisatest'
       var testArgs = 'testArg'
       docker.client.createContainer.yieldsAsync(null, testRes)
-      docker.createContainer(testArgs, function (err, res) {
+      docker.createContainer(testArgs).asCallback(function (err, res) {
         expect(err).to.not.exist()
         expect(res).to.equal(testRes)
         expect(docker.client.createContainer.withArgs(testArgs).calledOnce).to.be.true()
@@ -137,7 +137,7 @@ describe('docker.js unit test', function () {
       var testArgs = 'testArg'
       docker.client.createContainer.onCall(0).yieldsAsync('error')
       docker.client.createContainer.onCall(1).yieldsAsync(null, testRes)
-      docker.createContainer(testArgs, function (err, res) {
+      docker.createContainer(testArgs).asCallback(function (err, res) {
         expect(err).to.not.exist()
         expect(res).to.equal(testRes)
         expect(docker.client.createContainer.withArgs(testArgs).calledTwice).to.be.true()
@@ -151,8 +151,8 @@ describe('docker.js unit test', function () {
       var testArgs = 'testArg'
       docker.client.createContainer.onCall(0).yieldsAsync(testError)
       docker.client.createContainer.onCall(1).yieldsAsync(testError)
-      docker.createContainer(testArgs, function (err) {
-        expect(err).to.equal(testError)
+      docker.createContainer(testArgs).asCallback(function (err) {
+        expect(err.message).to.equal(testError)
         expect(docker.client.createContainer.withArgs(testArgs).calledTwice).to.be.true()
 
         done()
@@ -172,7 +172,7 @@ describe('docker.js unit test', function () {
     it('should call startContainer', function (done) {
       var testRes = 'thisisatest'
       containerMock.start.yieldsAsync(null, testRes)
-      docker.startContainer(containerMock, function (err, res) {
+      docker.startContainer(containerMock).asCallback(function (err, res) {
         expect(err).to.not.exist()
         expect(res).to.equal(testRes)
         expect(containerMock.start.calledOnce).to.be.true()
@@ -185,7 +185,7 @@ describe('docker.js unit test', function () {
       var testRes = 'thisisatest'
       containerMock.start.onCall(0).yieldsAsync('error')
       containerMock.start.onCall(1).yieldsAsync(null, testRes)
-      docker.startContainer(containerMock, function (err, res) {
+      docker.startContainer(containerMock).asCallback(function (err, res) {
         expect(err).to.not.exist()
         expect(res).to.equal(testRes)
         expect(containerMock.start.calledTwice).to.be.true()
@@ -198,8 +198,8 @@ describe('docker.js unit test', function () {
       var testError = 'explode'
       containerMock.start.onCall(0).yieldsAsync(testError)
       containerMock.start.onCall(1).yieldsAsync(testError)
-      docker.startContainer(containerMock, function (err) {
-        expect(err).to.equal(testError)
+      docker.startContainer(containerMock).asCallback(function (err) {
+        expect(err.message).to.equal(testError)
         expect(containerMock.start.calledTwice).to.be.true()
 
         done()
@@ -219,7 +219,7 @@ describe('docker.js unit test', function () {
     it('should call removeContainer', function (done) {
       var testRes = 'thisisatest'
       containerMock.remove.yieldsAsync(null, testRes)
-      docker.removeContainer(containerMock, function (err, res) {
+      docker.removeContainer(containerMock).asCallback(function (err, res) {
         expect(err).to.not.exist()
         expect(res).to.equal(testRes)
         expect(containerMock.remove.calledOnce).to.be.true()
@@ -232,7 +232,7 @@ describe('docker.js unit test', function () {
       var testRes = 'thisisatest'
       containerMock.remove.onCall(0).yieldsAsync('error')
       containerMock.remove.onCall(1).yieldsAsync(null, testRes)
-      docker.removeContainer(containerMock, function (err, res) {
+      docker.removeContainer(containerMock).asCallback(function (err, res) {
         expect(err).to.not.exist()
         expect(res).to.equal(testRes)
         expect(containerMock.remove.calledTwice).to.be.true()
@@ -245,8 +245,8 @@ describe('docker.js unit test', function () {
       var testError = 'explode'
       containerMock.remove.onCall(0).yieldsAsync(testError)
       containerMock.remove.onCall(1).yieldsAsync(testError)
-      docker.removeContainer(containerMock, function (err) {
-        expect(err).to.equal(testError)
+      docker.removeContainer(containerMock).asCallback(function (err) {
+        expect(err.message).to.equal(testError)
         expect(containerMock.remove.calledTwice).to.be.true()
         done()
       })
@@ -280,7 +280,7 @@ describe('docker.js unit test', function () {
       var testLog = 'thisisatest'
       containerMock.logs.yieldsAsync(null, str(testLog))
 
-      docker.containerLogs(containerMock, function (err, logs) {
+      docker.containerLogs(containerMock).asCallback(function (err, logs) {
         expect(err).to.not.exist()
         expect(logs).to.equal(testLog)
         expect(containerMock.logs.calledOnce).to.be.true()
@@ -295,8 +295,8 @@ describe('docker.js unit test', function () {
       process.env.DOCKER_RETRY_ATTEMPTS = 1
       containerMock.logs.yields(null, str(testLogLog))
 
-      docker.containerLogs(containerMock, function (err) {
-        expect(err).to.equal(testLogLog)
+      docker.containerLogs(containerMock).asCallback(function (err) {
+        expect(err.message).to.equal(testLogLog)
         expect(containerMock.logs.calledOnce).to.be.true()
 
         done()
@@ -307,7 +307,7 @@ describe('docker.js unit test', function () {
       var testLog = 'thisisatest'
       containerMock.logs.onCall(0).yieldsAsync('error')
       containerMock.logs.onCall(1).yieldsAsync(null, str(testLog))
-      docker.containerLogs(containerMock, function (err, logs) {
+      docker.containerLogs(containerMock).asCallback(function (err, logs) {
         expect(err).to.not.exist()
         expect(logs).to.equal(testLog)
         expect(containerMock.logs.calledTwice).to.be.true()
@@ -320,8 +320,8 @@ describe('docker.js unit test', function () {
       var testError = 'explode'
       containerMock.logs.onCall(0).yieldsAsync(testError)
       containerMock.logs.onCall(1).yieldsAsync(testError)
-      docker.containerLogs(containerMock, function (err) {
-        expect(err).to.equal(testError)
+      docker.containerLogs(containerMock).asCallback(function (err) {
+        expect(err.message).to.equal(testError)
         expect(containerMock.logs.calledTwice).to.be.true()
 
         done()
