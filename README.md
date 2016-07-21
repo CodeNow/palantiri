@@ -43,18 +43,14 @@ required data: { host: 'http:localhost:4242', githubId: '23984567' }
 Listens to the `user-whitelisted` event and publishes an `asg.check-created` job.
 
 ##### `asg.check-crated`
-Makes sure an ASG was properly created for an organization (formerly a whitelisted 
+Makes sure an ASG was properly created for an organization (formerly a whitelisted
 user). If that's not the case, it will send off a Pager Duty in order to let an
 engineer know about this.
 
 #### Server Workflow
-0. The server is started and subscribes to the relevant queues (see: `lib/app.js` and
+1. The server is started and subscribes to the relevant queues (see: `lib/app.js` and
   `lib/external/rabbitmq.js`)
-1. A job is assigned to the worker server from a particular queue (see: `lib/external/rabbitmq.js`)
-2. Palantiri constructs a new `Worker` instance for the job (see: `lib/workers/`)
-3. The worker attempts to perform the task by running the handler:
-  1. On success: the worker acknowledges to RabbitMQ that the job is complete
-  2. On failure: the worker acknowledges to RabbitMQ that the job is complete and logs error
+2. A job is assigned to the worker server from a particular queue (see: `lib/external/rabbitmq.js`)
 
 #### Queue Names
 The names of the queues used by Palantiri have been chosen according to the following format.
@@ -64,10 +60,7 @@ The names of the queues used by Palantiri have been chosen according to the foll
 Queue names must begin with `<service>-`, where service is the item getting checked
 
 #### Workers
-Workers all inherit from the base-worker class (see: `lib/workers/base-worker.js`)
-The base worker takes care of the domain handling and children should implement a few methods
-1. handle: function to run when job is received
-2. isDataValid: used to check if data received from job is valid
+Workers are standard Ponos workers.
 
 #### Worker Best Practices
 To ensure that the system is robust as possible there are two hard rules that
