@@ -11,10 +11,10 @@ var Code = require('code')
 var expect = Code.expect
 var ErrorCat = require('error-cat')
 
+const CriticalError = require('error-cat/errors/critical-error')
 var sinon = require('sinon')
 var Promise = require('bluebird')
 require('sinon-as-promised')(Promise)
-var Dockerode = require('dockerode')
 var swarm = require('../../lib/external/swarm')
 const ponos = require('ponos')
 var App = require('../../lib/app.js')
@@ -22,27 +22,17 @@ var Docker = require('../../lib/external/docker.js')
 
 describe('functional test', function () {
   var app
-  var dockerStub
   var server
 
   beforeEach(function (done) {
     process.env.COLLECT_INTERVAL = 100000
     process.env.RSS_LIMIT = 2000
-    dockerStub = {
-      start: sinon.stub().yieldsAsync(),
-      remove: sinon.stub().yieldsAsync(),
-      logs: sinon.stub(),
-      modem: {
-        demuxStream: function (input, stdout) {
-          stdout.write(JSON.stringify({ info: { VmRSS: '1234 kb' } }))
-        }
-      }
-    }
-    sinon.stub(Dockerode.prototype, 'createContainer')
-      .yieldsAsync(null, dockerStub)
+    sinon.stub(Docker.prototype, 'createContainer').resolves({})
+    sinon.stub(Docker.prototype, 'startContainer').resolves()
+    sinon.stub(Docker.prototype, 'removeContainer').resolves()
+    sinon.stub(Docker.prototype, 'containerLogs').resolves(JSON.stringify({ info: { VmRSS: '1234 kb' } }))
     sinon.stub(ErrorCat, 'report')
-    sinon.stub(Docker.prototype, 'pullImage')
-      .yieldsAsync(null)
+    sinon.stub(Docker.prototype, 'pullImage').resolves(null)
     sinon.stub(swarm.prototype, 'getNodes')
     app = new App()
     done()
@@ -52,7 +42,10 @@ describe('functional test', function () {
     delete process.env.COLLECT_INTERVAL
     delete process.env.RSS_LIMIT
     swarm.prototype.getNodes.restore()
-    Dockerode.prototype.createContainer.restore()
+    Docker.prototype.createContainer.restore()
+    Docker.prototype.startContainer.restore()
+    Docker.prototype.removeContainer.restore()
+    Docker.prototype.containerLogs.restore()
     Docker.prototype.pullImage.restore()
     ErrorCat.report.restore()
     done()
@@ -66,13 +59,6 @@ describe('functional test', function () {
       app.stop(done)
     })
     it('should run health check for docks', function (done) {
-      var fakeStream = {
-        on: function (e, cb) {
-          cb()
-        }
-      }
-      dockerStub.logs.yieldsAsync(null, fakeStream)
-
       swarm.prototype.getNodes.resolves([{
         Host: 'localhost:4242',
         Labels: {
@@ -80,7 +66,7 @@ describe('functional test', function () {
         }
       }])
       var interval = setInterval(function () {
-        if (dockerStub.remove.called) {
+        if (Docker.prototype.removeContainer.called) {
           clearInterval(interval)
           done()
         }
@@ -100,13 +86,6 @@ describe('functional test', function () {
     it('should emit unhealthy event if dock unhealthy', function (done) {
       process.env.RSS_LIMIT = 1
       var testHost = 'https://localhost:4242'
-      var fakeStream = {
-        on: function (e, cb) {
-          cb()
-        }
-      }
-      dockerStub.logs.yieldsAsync(null, fakeStream)
-
       swarm.prototype.getNodes.resolves([{
         Host: 'localhost:4242',
         Labels: {
@@ -119,7 +98,7 @@ describe('functional test', function () {
             expect(job.host).to.equal(testHost)
             expect(job.githubId).to.equal(1111)
             var interval = setInterval(function () {
-              if (dockerStub.remove.called) {
+              if (Docker.prototype.removeContainer.called) {
                 clearInterval(interval)
                 done()
               }
@@ -136,27 +115,16 @@ describe('functional test', function () {
 })
 
 describe('Unhealthy Test', function () {
-  var dockerStub
   var app
   var server
   beforeEach(function (done) {
     process.env.COLLECT_INTERVAL = 100000
     process.env.RSS_LIMIT = 2000
-    dockerStub = {
-      start: sinon.stub().yieldsAsync(new Error('Error response from daemon: Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot allocate memory')),
-      remove: sinon.stub().yieldsAsync(),
-      logs: sinon.stub(),
-      modem: {
-        demuxStream: function (input, stdout) {
-          stdout.write(JSON.stringify({ info: { VmRSS: '1234 kb' } }))
-        }
-      }
-    }
-    sinon.stub(Dockerode.prototype, 'createContainer')
-      .yieldsAsync(null, dockerStub)
+    sinon.stub(Docker.prototype, 'createContainer').resolves({})
+    sinon.stub(Docker.prototype, 'startContainer').resolves(null)
+    sinon.stub(Docker.prototype, 'containerLogs').rejects(new CriticalError('Error response from daemon: Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot allocate memory'))
     sinon.stub(ErrorCat, 'report')
-    sinon.stub(Docker.prototype, 'pullImage')
-      .yieldsAsync(null)
+    sinon.stub(Docker.prototype, 'pullImage').resolves(null)
     sinon.stub(swarm.prototype, 'getNodes')
     app = new App()
     app.start(done)
@@ -166,7 +134,9 @@ describe('Unhealthy Test', function () {
     delete process.env.COLLECT_INTERVAL
     delete process.env.RSS_LIMIT
     swarm.prototype.getNodes.restore()
-    Dockerode.prototype.createContainer.restore()
+    Docker.prototype.createContainer.restore()
+    Docker.prototype.startContainer.restore()
+    Docker.prototype.containerLogs.restore()
     Docker.prototype.pullImage.restore()
     ErrorCat.report.restore()
     app.stop(function (err) {
