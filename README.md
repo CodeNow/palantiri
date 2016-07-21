@@ -42,7 +42,7 @@ required data: { host: 'http:localhost:4242', githubId: '23984567' }
 ##### `user-whitelisted`
 Listens to the `user-whitelisted` event and publishes an `asg.check-created` job.
 
-##### `asg.check-crated`
+##### `asg.check-created`
 Makes sure an ASG was properly created for an organization (formerly a whitelisted
 user). If that's not the case, it will send off a Pager Duty in order to let an
 engineer know about this.
