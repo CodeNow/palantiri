@@ -2,6 +2,7 @@
 
 require('loadenv')()
 
+const Promise = require('bluebird')
 var Lab = require('lab')
 var lab = exports.lab = Lab.script()
 var describe = lab.describe
@@ -12,457 +13,260 @@ var Code = require('code')
 var expect = Code.expect
 
 var sinon = require('sinon')
-var clone = require('101/clone')
+require('sinon-as-promised')(Promise)
 
+const Docker = require('../../../lib/external/docker.js')
 var DockerHealthCheck = require('../../../lib/workers/docker-health-check.js')
 var rabbitmq = require('../../../lib/external/rabbitmq.js')
-var monitorDog = require('monitor-dog')
-var ErrorCat = require('error-cat')
+const WorkerStopError = require('error-cat/errors/worker-stop-error')
 
 describe('docker-health-check.js unit test', function () {
-  var dockerHealthCheck
+  var container = {
+    id: 'docker-container-id-1'
+  }
   beforeEach(function (done) {
-    dockerHealthCheck = new DockerHealthCheck()
+    process.env.RSS_LIMIT = 1
+    sinon.stub(Docker.prototype, 'pullImage').resolves()
+    sinon.stub(Docker.prototype, 'createContainer').resolves(container)
+    sinon.stub(Docker.prototype, 'startContainer').resolves()
+    sinon.stub(Docker.prototype, 'containerLogs').resolves('{"id": "some-id"}')
+    sinon.stub(Docker.prototype, 'removeContainer').resolves()
+    sinon.stub(rabbitmq, 'publishOnDockUnhealthy')
     done()
   })
 
-  describe('worker', function () {
-    beforeEach(function (done) {
-      sinon.stub(DockerHealthCheck.prototype, 'worker').yieldsAsync()
+  afterEach(function (done) {
+    delete process.env.RSS_LIMIT
+    Docker.prototype.pullImage.restore()
+    Docker.prototype.createContainer.restore()
+    Docker.prototype.startContainer.restore()
+    Docker.prototype.containerLogs.restore()
+    Docker.prototype.removeContainer.restore()
+    rabbitmq.publishOnDockUnhealthy.restore()
+    done()
+  })
+
+  it('should fail if dockerHost is null', function (done) {
+    DockerHealthCheck({})
+    .then(function () {
+      done(new Error('Should never happen'))
+    })
+    .catch(function (err) {
+      expect(err.message).to.include('"dockerHost" is required')
+      expect(err).instanceOf(WorkerStopError)
       done()
     })
+  })
 
-    afterEach(function (done) {
-      DockerHealthCheck.prototype.worker.restore()
+  it('should fail if dockerHost is not a string', function (done) {
+    DockerHealthCheck({ dockerHost: 1 })
+    .then(function () {
+      done(new Error('Should never happen'))
+    })
+    .catch(function (err) {
+      expect(err.message).to.include('"dockerHost" must be a string')
+      expect(err).instanceOf(WorkerStopError)
       done()
     })
+  })
 
-    it('should call worker', function (done) {
-      var testData = {
-        summon: 'Ramuh'
-      }
-      DockerHealthCheck.prototype.worker.yieldsAsync()
-
-      DockerHealthCheck.worker(testData, function (err) {
-        expect(DockerHealthCheck.prototype.worker.withArgs(testData).called)
-          .to.be.true()
-        expect(err).to.not.exist()
-
-        done()
-      })
+  it('should fail if githubId is null', function (done) {
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1' })
+    .then(function () {
+      done(new Error('Should never happen'))
     })
-  }) // end worker
-
-  describe('handle', function () {
-    beforeEach(function (done) {
-      sinon.stub(DockerHealthCheck.prototype, 'pullInfoContainer')
-      sinon.stub(DockerHealthCheck.prototype, 'createInfoContainer')
-      sinon.stub(DockerHealthCheck.prototype, 'startInfoContainer')
-      sinon.stub(DockerHealthCheck.prototype, 'readInfoContainer')
-      sinon.stub(DockerHealthCheck.prototype, 'reportData')
-      sinon.stub(DockerHealthCheck.prototype, 'removeInfoContainer')
-      sinon.stub(DockerHealthCheck.prototype, 'checkErrorForMemoryFailure')
-
+    .catch(function (err) {
+      expect(err.message).to.include('"githubId" is required')
+      expect(err).instanceOf(WorkerStopError)
       done()
     })
+  })
 
-    afterEach(function (done) {
-      DockerHealthCheck.prototype.pullInfoContainer.restore()
-      DockerHealthCheck.prototype.createInfoContainer.restore()
-      DockerHealthCheck.prototype.startInfoContainer.restore()
-      DockerHealthCheck.prototype.readInfoContainer.restore()
-      DockerHealthCheck.prototype.reportData.restore()
-      DockerHealthCheck.prototype.removeInfoContainer.restore()
-      DockerHealthCheck.prototype.checkErrorForMemoryFailure.restore()
-
+  it('should fail if githubId is not a number', function (done) {
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 'anton' })
+    .then(function () {
+      done(new Error('Should never happen'))
+    })
+    .catch(function (err) {
+      expect(err.message).to.include('"githubId" must be a number')
+      expect(err).instanceOf(WorkerStopError)
       done()
     })
+  })
 
-    it('should call handle', function (done) {
-      var testData = {
-        dockerHost: 'http://localhost:4242',
-        githubId: 123215
-      }
-      DockerHealthCheck.prototype.pullInfoContainer.yieldsAsync()
-      DockerHealthCheck.prototype.createInfoContainer.yieldsAsync()
-      DockerHealthCheck.prototype.startInfoContainer.yieldsAsync()
-      DockerHealthCheck.prototype.readInfoContainer.yieldsAsync()
-      DockerHealthCheck.prototype.reportData.yieldsAsync()
-      DockerHealthCheck.prototype.removeInfoContainer.yieldsAsync()
-
-      dockerHealthCheck.handle(testData, function (err) {
-        expect(err).to.not.exist()
-        sinon.assert.notCalled(DockerHealthCheck.prototype.checkErrorForMemoryFailure)
-        expect(dockerHealthCheck.dockerClient).to.exist()
-        expect(dockerHealthCheck.githubId)
-          .to.equal(testData.githubId)
-
-        done()
-      })
+  it('should fail if pullImage failed', function (done) {
+    Docker.prototype.pullImage.rejects(new Error('Docker error'))
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .then(function () {
+      done(new Error('Should never happen'))
     })
-
-    it('should return error if one failed', function (done) {
-      var testErr = 'meltdown'
-      var testData = {
-        dockerHost: 'http://localhost:4242',
-        githubId: 123215
-      }
-      DockerHealthCheck.prototype.pullInfoContainer.yieldsAsync()
-      DockerHealthCheck.prototype.createInfoContainer.yieldsAsync()
-      DockerHealthCheck.prototype.startInfoContainer.yieldsAsync()
-      DockerHealthCheck.prototype.readInfoContainer.yieldsAsync(testErr)
-      DockerHealthCheck.prototype.reportData.yieldsAsync()
-      DockerHealthCheck.prototype.removeInfoContainer.yieldsAsync()
-
-      dockerHealthCheck.handle(testData, function (err) {
-        expect(err).to.exist()
-        sinon.assert.calledWith(DockerHealthCheck.prototype.checkErrorForMemoryFailure, err)
-
-        done()
-      })
-    })
-  }) // end handle
-
-  describe('pullInfoContainer', function () {
-    beforeEach(function (done) {
-      dockerHealthCheck.dockerClient = {
-        pullImage: sinon.stub()
-      }
+    .catch(function (err) {
+      expect(err.message).to.equal('Docker error')
       done()
     })
+  })
 
-    it('should cb on good response', function (done) {
-      dockerHealthCheck.dockerClient.pullImage
-        .yieldsAsync(null)
-
-      dockerHealthCheck.pullInfoContainer(function (err) {
-        expect(err).to.not.exist()
-
-        done()
-      })
+  it('should fail if createContainer failed', function (done) {
+    Docker.prototype.createContainer.rejects(new Error('Docker error'))
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .then(function () {
+      done(new Error('Should never happen'))
     })
-
-    it('should cb error', function (done) {
-      var testError = 'ice sword'
-      dockerHealthCheck.dockerClient.pullImage
-        .yieldsAsync(testError)
-
-      dockerHealthCheck.pullInfoContainer(function (err) {
-        expect(err).to.exist()
-
-        done()
-      })
-    })
-  }) // end pullInfoContainer
-
-  describe('createInfoContainer', function () {
-    beforeEach(function (done) {
-      dockerHealthCheck.dockerClient = {
-        createContainer: sinon.stub()
-      }
+    .catch(function (err) {
+      expect(err.message).to.equal('Docker error')
       done()
     })
+  })
 
-    it('should set container on good response', function (done) {
-      var testContainer = 'Titan'
-      dockerHealthCheck.dockerClient.createContainer
-        .yieldsAsync(null, testContainer)
-
-      dockerHealthCheck.createInfoContainer(function (err) {
-        expect(err).to.not.exist()
-        expect(dockerHealthCheck.container).to.equal(testContainer)
-
-        done()
-      })
+  it('should fail if startContainer failed', function (done) {
+    Docker.prototype.startContainer.rejects(new Error('Docker error'))
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .then(function () {
+      done(new Error('Should never happen'))
     })
-
-    it('should cb error', function (done) {
-      var testError = 'ice sword'
-      dockerHealthCheck.dockerClient.createContainer
-        .yieldsAsync(testError)
-
-      dockerHealthCheck.createInfoContainer(function (err) {
-        expect(err).to.exist()
-
-        done()
-      })
-    })
-  }) // end createInfoContainer
-
-  describe('startInfoContainer', function () {
-    beforeEach(function (done) {
-      dockerHealthCheck.dockerClient = {
-        startContainer: sinon.stub()
-      }
+    .catch(function (err) {
+      expect(err.message).to.equal('Docker error')
       done()
     })
+  })
 
-    it('should cb good response', function (done) {
-      var testContainer = 'Titan'
-      dockerHealthCheck.container = testContainer
-      dockerHealthCheck.dockerClient.startContainer
-        .yieldsAsync(null)
-
-      dockerHealthCheck.startInfoContainer(function (err) {
-        expect(err).to.not.exist()
-        expect(dockerHealthCheck.dockerClient.startContainer
-          .withArgs(testContainer).called).to.be.true()
-
-        done()
-      })
+  it('should fail if containerLogs failed', function (done) {
+    Docker.prototype.containerLogs.rejects(new Error('Docker error'))
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .then(function () {
+      done(new Error('Should never happen'))
     })
-
-    it('should cb error', function (done) {
-      var testError = 'ice sword'
-      dockerHealthCheck.dockerClient.startContainer
-        .yieldsAsync(testError)
-
-      dockerHealthCheck.startInfoContainer(function (err) {
-        expect(err).to.exist()
-
-        done()
-      })
-    })
-  }) // end startInfoContainer
-
-  describe('removeInfoContainer', function () {
-    beforeEach(function (done) {
-      dockerHealthCheck.dockerClient = {
-        removeContainer: sinon.stub()
-      }
+    .catch(function (err) {
+      expect(err.message).to.equal('Docker error')
       done()
     })
+  })
 
-    it('should cb on good response', function (done) {
-      var testContainer = 'Titan'
-      dockerHealthCheck.container = testContainer
-      dockerHealthCheck.dockerClient.removeContainer
-        .yieldsAsync(null)
-
-      dockerHealthCheck.removeInfoContainer(function (err) {
-        expect(err).to.not.exist()
-        expect(dockerHealthCheck.dockerClient.removeContainer
-          .withArgs(testContainer).called).to.be.true()
-
-        done()
-      })
+  it('should fail if removeContainer failed', function (done) {
+    Docker.prototype.removeContainer.rejects(new Error('Docker error'))
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .then(function () {
+      done(new Error('Should never happen'))
     })
-
-    it('should cb error', function (done) {
-      var testError = 'ice sword'
-      dockerHealthCheck.dockerClient.removeContainer
-        .yieldsAsync(testError)
-
-      dockerHealthCheck.removeInfoContainer(function (err) {
-        expect(err).to.exist()
-
-        done()
-      })
-    })
-  }) // end removeInfoContainer
-
-  describe('readInfoContainer', function () {
-    beforeEach(function (done) {
-      dockerHealthCheck.dockerClient = {
-        containerLogs: sinon.stub()
-      }
+    .catch(function (err) {
+      expect(err.message).to.equal('Docker error')
       done()
     })
+  })
 
-    it('should set logs on good response', function (done) {
-      var testContainer = 'Titan'
-      var testLogs = JSON.stringify({ test: 'me' })
-      dockerHealthCheck.container = testContainer
-      dockerHealthCheck.dockerClient.containerLogs
-        .yieldsAsync(null, testLogs)
-
-      dockerHealthCheck.readInfoContainer(function (err) {
-        expect(err).to.not.exist()
-        expect(dockerHealthCheck.dockerClient.containerLogs
-          .withArgs(testContainer).called).to.be.true()
-        expect(dockerHealthCheck.containerLogs).exist()
-
-        done()
-      })
+  it('should call pullImage with correct args', function (done) {
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .tap(function () {
+      sinon.assert.calledOnce(Docker.prototype.pullImage)
+      sinon.assert.calledWith(Docker.prototype.pullImage, process.env.INFO_IMAGE)
     })
+    .asCallback(done)
+  })
 
-    it('should cb error is error emited', function (done) {
-      var testContainer = 'Titan'
-      var testLogs = JSON.stringify({ error: 'firestone' })
-      dockerHealthCheck.container = testContainer
-      dockerHealthCheck.dockerClient.containerLogs
-        .yieldsAsync(null, testLogs)
-
-      dockerHealthCheck.readInfoContainer(function (err) {
-        expect(err).to.exist()
-        expect(dockerHealthCheck.dockerClient.containerLogs
-          .withArgs(testContainer).called).to.be.true()
-
-        done()
-      })
-    })
-
-    it('should error on parse err', function (done) {
-      var testContainer = 'Titan'
-      var testLogs = 'cantparse'
-      dockerHealthCheck.container = testContainer
-      dockerHealthCheck.dockerClient.containerLogs
-        .yieldsAsync(null, testLogs)
-
-      dockerHealthCheck.readInfoContainer(function (err) {
-        expect(err).to.exist()
-        expect(dockerHealthCheck.dockerClient.containerLogs
-          .withArgs(testContainer).called).to.be.true()
-
-        done()
-      })
-    })
-
-    it('should cb error', function (done) {
-      var testError = 'ice sword'
-      dockerHealthCheck.dockerClient.containerLogs
-        .yieldsAsync(testError)
-
-      dockerHealthCheck.readInfoContainer(function (err) {
-        expect(err).to.exist()
-
-        done()
-      })
-    })
-  }) // end readInfoContainer
-
-  describe('reportData', function () {
-    beforeEach(function (done) {
-      sinon.stub(rabbitmq, 'publishOnDockUnhealthy')
-      sinon.stub(monitorDog, 'gauge')
-      process.env.RSS_LIMIT = 1
-      done()
-    })
-
-    afterEach(function (done) {
-      rabbitmq.publishOnDockUnhealthy.restore()
-      monitorDog.gauge.restore()
-      delete process.env.RSS_LIMIT
-      done()
-    })
-
-    it('should send gauge data and not publish unhealthy', function (done) {
-      var testHost = 'http://localhost:4242'
-      var testContainerLogs = {
-        info: {
-          testKey: '1234 kb',
-          testAnotherKey: '2135'
+  it('should call createContainer with correct args', function (done) {
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .tap(function (c) {
+      sinon.assert.calledOnce(Docker.prototype.createContainer)
+      sinon.assert.calledWith(Docker.prototype.createContainer, {
+        Image: process.env.INFO_IMAGE,
+        Labels: {
+          type: 'docker-health-check'
+        },
+        Env: [
+          'LOOKUP_CMD=/docker',
+          'LOOKUP_ARGS=-d'
+        ],
+        HostConfig: {
+          Privileged: true,
+          PidMode: 'host'
         }
-      }
-      dockerHealthCheck.containerLogs = testContainerLogs
-      dockerHealthCheck.dockerHost = testHost
-      monitorDog.gauge.returns()
-
-      dockerHealthCheck.reportData(function (err) {
-        expect(err).to.not.exist()
-        expect(rabbitmq.publishOnDockUnhealthy
-          .called).to.be.false()
-        expect(monitorDog.gauge.withArgs('testKey',
-          1234, ['dockerHost:' + testHost]).called).to.be.true()
-        expect(monitorDog.gauge.withArgs('testAnotherKey',
-          2135, ['dockerHost:' + testHost]).called).to.be.true()
-
-        done()
       })
+      expect(container).to.equal(c)
     })
+    .asCallback(done)
+  })
 
-    it('should send gauge data and publish unhealthy', function (done) {
-      var testHost = 'http://localhost:4242'
-      var testContainerLogs = {
-        info: {
-          VmRSS: '1234 kb'
-        }
-      }
-      dockerHealthCheck.containerLogs = testContainerLogs
-      dockerHealthCheck.dockerHost = testHost
-      monitorDog.gauge.returns()
-
-      dockerHealthCheck.reportData(function (err) {
-        expect(err).to.not.exist()
-        expect(rabbitmq.publishOnDockUnhealthy
-          .called).to.be.true()
-        expect(monitorDog.gauge.withArgs('VmRSS',
-          1234, ['dockerHost:' + testHost]).called).to.be.true()
-
-        done()
-      })
+  it('should call startContainer with correct args', function (done) {
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .tap(function () {
+      sinon.assert.calledOnce(Docker.prototype.startContainer)
+      sinon.assert.calledWith(Docker.prototype.startContainer, container)
     })
-  }) // end reportData
+    .asCallback(done)
+  })
 
-  describe('isDataValid', function () {
-    it('should return false if data missing keys', function (done) {
-      var testData = {
-        dockerHost: 'host',
-        githubId: 2134
-      }
-      Object.keys(testData, function (key) {
-        var data = clone(testData)
-        delete data[key]
-        expect(dockerHealthCheck.isDataValid(data))
-          .to.be.false()
-      })
+  it('should call containerLogs with correct args', function (done) {
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .tap(function () {
+      sinon.assert.calledOnce(Docker.prototype.containerLogs)
+      sinon.assert.calledWith(Docker.prototype.containerLogs, container)
+    })
+    .asCallback(done)
+  })
 
-      expect(dockerHealthCheck.isDataValid({}))
-          .to.be.false()
+  it('should call removeContainer with correct args', function (done) {
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .tap(function () {
+      sinon.assert.calledOnce(Docker.prototype.removeContainer)
+      sinon.assert.calledWith(Docker.prototype.removeContainer, container)
+    })
+    .asCallback(done)
+  })
 
+  it('should fail with WorkerStopError if logs are invalid', function (done) {
+    Docker.prototype.containerLogs.resolves('{1-1}')
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .then(function () {
+      done(new Error('Should never happen'))
+    })
+    .catch(function (err) {
+      expect(err.message).to.equal('Invalid logs')
+      expect(err).instanceOf(WorkerStopError)
       done()
     })
+  })
 
-    it('should return true if all keys present', function (done) {
-      var testData = {
-        dockerHost: 'host',
-        githubId: 2134
-      }
-      expect(dockerHealthCheck.isDataValid(testData))
-        .to.be.true()
-
-      done()
-    })
-  }) // end isDataValid
-
-  describe('checkErrorForMemoryFailure', function () {
-    beforeEach(function (done) {
-      sinon.stub(rabbitmq, 'publishOnDockUnhealthy')
-      sinon.stub(ErrorCat, 'report')
-      done()
-    })
-
-    afterEach(function (done) {
-      rabbitmq.publishOnDockUnhealthy.restore()
-      ErrorCat.report.restore()
-      done()
-    })
-    it('should publish dock unhealthy when cannot allocate memory', function (done) {
-      var testError = new Error('Error pulling image (latest) from docker.io/runnable/libra, Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot allocate memory')
-      dockerHealthCheck.githubId = 2134
-      dockerHealthCheck.dockerHost = 'host'
-      dockerHealthCheck.checkErrorForMemoryFailure(testError)
-
-      sinon.assert.calledOnce(ErrorCat.report, 503, testError.message, {
-        dockerHost: 'host',
-        githubId: 2134
-      })
+  it('should publish on-healthy event if logs has "cannot allocate memory" msg', function (done) {
+    Docker.prototype.containerLogs.resolves('{"error":"cannot allocate memory"}')
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .tap(function () {
       sinon.assert.calledOnce(rabbitmq.publishOnDockUnhealthy)
       sinon.assert.calledWith(rabbitmq.publishOnDockUnhealthy, {
-        githubId: 2134,
-        host: 'host'
+        host: 'https://10.20.0.1',
+        githubId: 1
       })
-      done()
     })
-    it('should not do anything when the error doesn\'t match', function (done) {
-      var testError = 'Error pulling image (latest) from docker.io/runnable/libra, Untar error on re-exec cmd: fork/exec /proc/self/exe: cannot pop bottles'
-      dockerHealthCheck.githubId = 2134
-      dockerHealthCheck.dockerHost = 'host'
-      sinon.assert.notCalled(ErrorCat.report)
-      dockerHealthCheck.checkErrorForMemoryFailure(testError)
+    .asCallback(done)
+  })
 
+  it('should not publish on-healthy event if logs has no "cannot allocate memory" msg', function (done) {
+    Docker.prototype.containerLogs.resolves('{"error":"some error"}')
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .tap(function () {
       sinon.assert.notCalled(rabbitmq.publishOnDockUnhealthy)
-      done()
     })
+    .asCallback(done)
+  })
+
+  it('should publish on-healthy event if too much memory used', function (done) {
+    Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 2}}')
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .tap(function () {
+      sinon.assert.calledOnce(rabbitmq.publishOnDockUnhealthy)
+      sinon.assert.calledWith(rabbitmq.publishOnDockUnhealthy, {
+        host: 'https://10.20.0.1',
+        githubId: 1
+      })
+    })
+    .asCallback(done)
+  })
+
+  it('should not publish on-healthy event if not much memory used', function (done) {
+    Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 0.8}}')
+    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: 1 })
+    .tap(function () {
+      sinon.assert.notCalled(rabbitmq.publishOnDockUnhealthy)
+    })
+    .asCallback(done)
   })
 })
