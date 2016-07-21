@@ -24,7 +24,7 @@
   "homepage": "https://github.com/CodeNow/palantiri#readme",
   "dependencies": {
     "101": "^1.0.0",
-    "@runnable/loki": "^1.1.8",
+    "@runnable/loki": "^3.0.0",
     "async": "^1.4.2",
     "bluebird": "^3.4.1",
     "bunyan": "^1.5.0",
