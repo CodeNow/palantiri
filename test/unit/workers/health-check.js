@@ -53,15 +53,15 @@ describe('health-check.js unit test', function () {
       if (err) { done(err) }
       sinon.assert.calledThrice(rabbitmq.publishDockerHealthCheck)
       sinon.assert.calledWith(rabbitmq.publishDockerHealthCheck, {
-        dockerHost: 'host1',
+        dockerHost: 'http://host1',
         githubId: '11111'
       })
       sinon.assert.calledWith(rabbitmq.publishDockerHealthCheck, {
-        dockerHost: 'host2',
+        dockerHost: 'http://host2',
         githubId: '2222'
       })
       sinon.assert.calledWith(rabbitmq.publishDockerHealthCheck, {
-        dockerHost: 'host3',
+        dockerHost: 'http://host3',
         githubId: '3333'
       })
       done()

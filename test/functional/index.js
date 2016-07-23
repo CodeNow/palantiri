@@ -135,6 +135,7 @@ describe('Unhealthy Test', function () {
     Docker.prototype.startContainer.restore()
     Docker.prototype.containerLogs.restore()
     Docker.prototype.pullImage.restore()
+    rabbitmq.publishOnDockUnhealthy.restore()
     ErrorCat.report.restore()
     app.stop(done)
   })

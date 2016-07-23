@@ -52,7 +52,7 @@ describe('docker-health-check.js unit test', function () {
       done(new Error('Should never happen'))
     })
     .catch(function (err) {
-      expect(err.message).to.include('"dockerHost" is required')
+      expect(err.data.validationError.message).to.include('"dockerHost" is required')
       expect(err).instanceOf(WorkerStopError)
       done()
     })
@@ -71,7 +71,7 @@ describe('docker-health-check.js unit test', function () {
   })
 
   it('should fail if githubId is null', function (done) {
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1' })
     .then(function () {
       done(new Error('Should never happen'))
     })
@@ -83,7 +83,7 @@ describe('docker-health-check.js unit test', function () {
   })
 
   it('should fail if githubId is not a string', function (done) {
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: {} })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: {} })
     .then(function () {
       done(new Error('Should never happen'))
     })
@@ -96,7 +96,7 @@ describe('docker-health-check.js unit test', function () {
 
   it('should fail if pullImage failed', function (done) {
     Docker.prototype.pullImage.rejects(new Error('Docker error'))
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .then(function () {
       done(new Error('Should never happen'))
     })
@@ -108,7 +108,7 @@ describe('docker-health-check.js unit test', function () {
 
   it('should fail if createContainer failed', function (done) {
     Docker.prototype.createContainer.rejects(new Error('Docker error'))
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .then(function () {
       done(new Error('Should never happen'))
     })
@@ -120,7 +120,7 @@ describe('docker-health-check.js unit test', function () {
 
   it('should fail if startContainer failed', function (done) {
     Docker.prototype.startContainer.rejects(new Error('Docker error'))
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .then(function () {
       done(new Error('Should never happen'))
     })
@@ -132,7 +132,7 @@ describe('docker-health-check.js unit test', function () {
 
   it('should fail if containerLogs failed', function (done) {
     Docker.prototype.containerLogs.rejects(new Error('Docker error'))
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .then(function () {
       done(new Error('Should never happen'))
     })
@@ -144,7 +144,7 @@ describe('docker-health-check.js unit test', function () {
 
   it('should fail if removeContainer failed', function (done) {
     Docker.prototype.removeContainer.rejects(new Error('Docker error'))
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .then(function () {
       done(new Error('Should never happen'))
     })
@@ -155,7 +155,7 @@ describe('docker-health-check.js unit test', function () {
   })
 
   it('should call pullImage with correct args', function (done) {
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .tap(function () {
       sinon.assert.calledOnce(Docker.prototype.pullImage)
       sinon.assert.calledWith(Docker.prototype.pullImage, process.env.INFO_IMAGE)
@@ -164,7 +164,7 @@ describe('docker-health-check.js unit test', function () {
   })
 
   it('should call createContainer with correct args', function (done) {
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .tap(function (c) {
       sinon.assert.calledOnce(Docker.prototype.createContainer)
       sinon.assert.calledWith(Docker.prototype.createContainer, {
@@ -186,7 +186,7 @@ describe('docker-health-check.js unit test', function () {
   })
 
   it('should call startContainer with correct args', function (done) {
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .tap(function () {
       sinon.assert.calledOnce(Docker.prototype.startContainer)
       sinon.assert.calledWith(Docker.prototype.startContainer, container)
@@ -195,7 +195,7 @@ describe('docker-health-check.js unit test', function () {
   })
 
   it('should call containerLogs with correct args', function (done) {
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .tap(function () {
       sinon.assert.calledOnce(Docker.prototype.containerLogs)
       sinon.assert.calledWith(Docker.prototype.containerLogs, container)
@@ -204,7 +204,7 @@ describe('docker-health-check.js unit test', function () {
   })
 
   it('should call removeContainer with correct args', function (done) {
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .tap(function () {
       sinon.assert.calledOnce(Docker.prototype.removeContainer)
       sinon.assert.calledWith(Docker.prototype.removeContainer, container)
@@ -214,7 +214,7 @@ describe('docker-health-check.js unit test', function () {
 
   it('should fail with WorkerStopError if logs are invalid', function (done) {
     Docker.prototype.containerLogs.resolves('{1-1}')
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .then(function () {
       done(new Error('Should never happen'))
     })
@@ -227,11 +227,11 @@ describe('docker-health-check.js unit test', function () {
 
   it('should publish on-healthy event if logs has "cannot allocate memory" msg', function (done) {
     Docker.prototype.containerLogs.resolves('{"error":"cannot allocate memory"}')
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .tap(function () {
       sinon.assert.calledOnce(rabbitmq.publishOnDockUnhealthy)
       sinon.assert.calledWith(rabbitmq.publishOnDockUnhealthy, {
-        host: 'https://10.20.0.1',
+        host: 'http://10.20.0.1',
         githubId: '2335750'
       })
     })
@@ -240,7 +240,7 @@ describe('docker-health-check.js unit test', function () {
 
   it('should not publish on-healthy event if logs has no "cannot allocate memory" msg', function (done) {
     Docker.prototype.containerLogs.resolves('{"error":"some error"}')
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .tap(function () {
       sinon.assert.notCalled(rabbitmq.publishOnDockUnhealthy)
     })
@@ -249,11 +249,11 @@ describe('docker-health-check.js unit test', function () {
 
   it('should publish on-healthy event if too much memory used', function (done) {
     Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 2}}')
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .tap(function () {
       sinon.assert.calledOnce(rabbitmq.publishOnDockUnhealthy)
       sinon.assert.calledWith(rabbitmq.publishOnDockUnhealthy, {
-        host: 'https://10.20.0.1',
+        host: 'http://10.20.0.1',
         githubId: '2335750'
       })
     })
@@ -262,7 +262,7 @@ describe('docker-health-check.js unit test', function () {
 
   it('should not publish on-healthy event if not much memory used', function (done) {
     Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 0.8}}')
-    DockerHealthCheck({ dockerHost: 'https://10.20.0.1', githubId: '2335750' })
+    DockerHealthCheck({ dockerHost: 'http://10.20.0.1', githubId: '2335750' })
     .tap(function () {
       sinon.assert.notCalled(rabbitmq.publishOnDockUnhealthy)
     })
