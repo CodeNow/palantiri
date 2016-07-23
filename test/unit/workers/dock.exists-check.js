@@ -1,0 +1,149 @@
+'use strict'
+require('loadenv')()
+
+const Code = require('code')
+const Lab = require('lab')
+const Promise = require('bluebird')
+const sinon = require('sinon')
+const WorkerError = require('error-cat/errors/worker-error')
+const WorkerStopError = require('error-cat/errors/worker-stop-error')
+
+const Swarm = require('../../../lib/external/swarm.js')
+const DockExistsCheck = require('../../../lib/workers/dock.exists-check.js')
+const rabbitmq = require('../../../lib/external/rabbitmq.js')
+const BaseDockerClient = require('@runnable/loki')._BaseClient
+
+require('sinon-as-promised')(Promise)
+const lab = exports.lab = Lab.script()
+
+const afterEach = lab.afterEach
+const beforeEach = lab.beforeEach
+const describe = lab.describe
+const expect = Code.expect
+const it = lab.it
+
+describe('dock.exists-check.js unit test', () => {
+  beforeEach((done) => {
+    process.env.RSS_LIMIT = 1
+    sinon.stub(BaseDockerClient.prototype, 'killContainerAsync')
+    sinon.stub(Swarm.prototype, 'swarmHostExistsAsync')
+    sinon.stub(rabbitmq, 'publishDockRemoved')
+    done()
+  })
+
+  afterEach((done) => {
+    delete process.env.RSS_LIMIT
+    BaseDockerClient.prototype.killContainerAsync.restore()
+    Swarm.prototype.swarmHostExistsAsync.restore()
+    rabbitmq.publishDockRemoved.restore()
+    done()
+  })
+
+  it('should WorkerStopError if missing host', (done) => {
+    const testJob = {
+      githubId: '11111'
+    }
+
+    DockExistsCheck(testJob).asCallback((err) => {
+      expect(err).instanceOf(WorkerStopError)
+      expect(err.data.validationError.message).to.include('"host" is required')
+      sinon.assert.notCalled(rabbitmq.publishDockRemoved)
+      done()
+    })
+  })
+
+  it('should WorkerStopError if missing githubId', (done) => {
+    const testJob = {
+      host: 'http://10.0.0.2:4242'
+    }
+
+    DockExistsCheck(testJob).asCallback((err) => {
+      expect(err).instanceOf(WorkerStopError)
+      expect(err.data.validationError.message).to.include('"githubId" is required')
+      sinon.assert.notCalled(rabbitmq.publishDockRemoved)
+      done()
+    })
+  })
+
+  it('should call killContainerAsync', (done) => {
+    const testJob = {
+      host: 'http://10.0.0.2:4242',
+      githubId: '11111'
+    }
+    BaseDockerClient.prototype.killContainerAsync.returns(Promise.resolve())
+    Swarm.prototype.swarmHostExistsAsync.returns()
+    rabbitmq.publishDockRemoved.returns()
+    DockExistsCheck(testJob).asCallback((err) => {
+      if (err) { return done(err) }
+
+      sinon.assert.calledOnce(BaseDockerClient.prototype.killContainerAsync)
+      sinon.assert.calledWith(BaseDockerClient.prototype.killContainerAsync, 'swarm')
+      done()
+    })
+  })
+
+  it('should call swarmHostExistsAsync', (done) => {
+    const testJob = {
+      host: 'http://10.0.0.2:4242',
+      githubId: '11111'
+    }
+    BaseDockerClient.prototype.killContainerAsync.returns(Promise.resolve())
+    Swarm.prototype.swarmHostExistsAsync.returns()
+    rabbitmq.publishDockRemoved.returns()
+    DockExistsCheck(testJob).asCallback((err) => {
+      if (err) { return done(err) }
+
+      sinon.assert.calledOnce(Swarm.prototype.swarmHostExistsAsync)
+      sinon.assert.calledWith(Swarm.prototype.swarmHostExistsAsync, '10.0.0.2:4242')
+      done()
+    })
+  })
+
+  it('should call swarmHostExistsAsync if kill failed', (done) => {
+    const testJob = {
+      host: 'http://10.0.0.2:4242',
+      githubId: '11111'
+    }
+    BaseDockerClient.prototype.killContainerAsync.rejects('failed')
+    Swarm.prototype.swarmHostExistsAsync.returns()
+    rabbitmq.publishDockRemoved.returns()
+    DockExistsCheck(testJob).asCallback((err) => {
+      if (err) { return done(err) }
+
+      sinon.assert.calledOnce(Swarm.prototype.swarmHostExistsAsync)
+      sinon.assert.calledWith(Swarm.prototype.swarmHostExistsAsync, '10.0.0.2:4242')
+      done()
+    })
+  })
+
+  it('should throw WorkerError if exists', (done) => {
+    const testJob = {
+      host: 'http://10.0.0.2:4242',
+      githubId: '11111'
+    }
+    BaseDockerClient.prototype.killContainerAsync.resolves()
+    Swarm.prototype.swarmHostExistsAsync.resolves(true)
+    DockExistsCheck(testJob).asCallback((err) => {
+      expect(err).instanceOf(WorkerError)
+
+      sinon.assert.notCalled(rabbitmq.publishDockRemoved)
+      done()
+    })
+  })
+
+  it('should publishDockRemoved if not exists', (done) => {
+    const testJob = {
+      host: 'http://10.0.0.2:4242',
+      githubId: '11111'
+    }
+    BaseDockerClient.prototype.killContainerAsync.resolves()
+    Swarm.prototype.swarmHostExistsAsync.resolves(false)
+    DockExistsCheck(testJob).asCallback((err) => {
+      if (err) { return done(err) }
+
+      sinon.assert.calledOnce(rabbitmq.publishDockRemoved)
+      sinon.assert.calledWith(rabbitmq.publishDockRemoved, testJob)
+      done()
+    })
+  })
+})

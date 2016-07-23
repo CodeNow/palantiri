@@ -5,7 +5,6 @@ const Code = require('code')
 const CriticalError = require('error-cat/errors/critical-error')
 const ErrorCat = require('error-cat')
 const Lab = require('lab')
-const ponos = require('ponos')
 const Promise = require('bluebird')
 const sinon = require('sinon')
 
@@ -77,7 +76,9 @@ describe('functional test', function () {
   describe('dock unhealthy', function () {
     let stub
     beforeEach(function (done) {
-      sinon.stub(rabbitmq, 'publishOnDockUnhealthy', stub)
+      sinon.stub(rabbitmq, 'publishOnDockUnhealthy', function (data) {
+        stub(data)
+      })
       done()
     })
 
@@ -94,14 +95,11 @@ describe('functional test', function () {
         org: '1111'
       }])
       stub = (job) => {
-        expect(job.host).to.equal(testHost)
-        expect(job.githubId).to.equal(1111)
-        var interval = setInterval(function () {
-          if (Docker.prototype.removeContainer.called) {
-            clearInterval(interval)
-            done()
-          }
-        }, 15)
+        setTimeout(() => {
+          expect(job.host).to.equal(testHost)
+          expect(job.githubId).to.equal('1111')
+          done()
+        }, 10)
       }
 
       app.start()
@@ -111,7 +109,8 @@ describe('functional test', function () {
 
 describe('Unhealthy Test', function () {
   var app
-  var server
+  let stub
+
   beforeEach(function (done) {
     process.env.COLLECT_INTERVAL = 100000
     process.env.RSS_LIMIT = 2000
@@ -121,6 +120,9 @@ describe('Unhealthy Test', function () {
     sinon.stub(ErrorCat, 'report')
     sinon.stub(Docker.prototype, 'pullImage').resolves(null)
     sinon.stub(swarm.prototype, 'getHostsWithOrgs')
+    sinon.stub(rabbitmq, 'publishOnDockUnhealthy', function (data) {
+      stub(data)
+    })
     app = new App()
     app.start(done)
   })
@@ -134,25 +136,17 @@ describe('Unhealthy Test', function () {
     Docker.prototype.containerLogs.restore()
     Docker.prototype.pullImage.restore()
     ErrorCat.report.restore()
-    app.stop(function (err) {
-      if (err) {
-        return done()
-      }
-      server.stop().asCallback(done)
-    })
+    app.stop(done)
   })
+
   it('should emit unhealthy if start fails with out of memory error', function (done) {
-    server = new ponos.Server({
-      tasks: {
-        'on-dock-unhealthy': (job) => {
-          expect(job.host).to.equal(testHost)
-          expect(job.githubId).to.equal(1111)
-          Promise.resolve(job)
-          done()
-        }
-      }
-    })
-    server.start()
+    stub = (job) => {
+      setTimeout(() => {
+        expect(job.host).to.equal(testHost)
+        expect(job.githubId).to.equal('1111')
+        done()
+      }, 10)
+    }
     process.env.RSS_LIMIT = 1
     var testHost = 'http://localhost:4242'
 
