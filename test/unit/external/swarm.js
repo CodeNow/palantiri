@@ -34,7 +34,7 @@ describe('swarm unit test', () => {
         parsedSystemStatus: {
           ParsedNodes: [
             {
-              host: '127.0.0.1:4242',
+              Host: '127.0.0.1:4242',
               Labels: {
                 org: 27081
               }
