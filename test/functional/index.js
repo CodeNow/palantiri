@@ -61,7 +61,7 @@ describe('functional test', function () {
     })
     it('should run health check for docks', function (done) {
       swarm.prototype.getHostsWithOrgs.resolves([{
-        host: 'localhost:4242',
+        host: 'http://localhost:4242',
         org: '1111'
       }])
       var interval = setInterval(function () {
@@ -91,7 +91,7 @@ describe('functional test', function () {
       process.env.RSS_LIMIT = 1
       var testHost = 'http://localhost:4242'
       swarm.prototype.getHostsWithOrgs.resolves([{
-        host: 'localhost:4242',
+        host: 'http://localhost:4242',
         org: '1111'
       }])
       stub = (job) => {
@@ -152,7 +152,7 @@ describe('Unhealthy Test', function () {
     var testHost = 'http://localhost:4242'
 
     swarm.prototype.getHostsWithOrgs.resolves([{
-      host: 'localhost:4242',
+      host: 'http://localhost:4242',
       org: '1111'
     }])
   })

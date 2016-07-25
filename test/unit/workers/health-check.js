@@ -37,13 +37,13 @@ describe('health-check.js unit test', function () {
 
   it('should call publishDockerHealthCheck for each host', function (done) {
     const testHosts = [{
-      host: 'host1',
+      host: 'http://host1',
       org: '11111'
     }, {
-      host: 'host2',
+      host: 'http://host2',
       org: '2222'
     }, {
-      host: 'host3',
+      host: 'http://host3',
       org: '3333'
     }]
     swarm.prototype.getHostsWithOrgs.resolves(testHosts)
@@ -70,7 +70,7 @@ describe('health-check.js unit test', function () {
 
   it('should not error if node is malformed', function (done) {
     var testHosts = [{
-      host: 'host1',
+      host: 'http://host1',
       Labels: {}
     }]
     swarm.prototype.getHostsWithOrgs.resolves(testHosts)
