@@ -18,10 +18,12 @@ var rabbitClient = require('../../../lib/external/rabbitmq.js')
 describe('rabbitmq.js unit test', function () {
   beforeEach(function (done) {
     sinon.stub(rabbitClient, 'publishTask')
+    sinon.stub(rabbitClient, 'publishEvent')
     done()
   })
   afterEach(function (done) {
     rabbitClient.publishTask.restore()
+    rabbitClient.publishEvent.restore()
     done()
   })
   describe('publishHealthCheck', function () {
@@ -29,10 +31,6 @@ describe('rabbitmq.js unit test', function () {
       rabbitClient.publishHealthCheck()
       expect(rabbitClient.publishTask
         .withArgs('health-check').called).to.be.true()
-      expect(rabbitClient.publishTask
-        .args[0][1].timestamp).to.exist()
-      expect(rabbitClient.publishTask
-        .args[0][1].healthCheckId).to.exist()
       done()
     })
   }) // end publishHealthCheck
@@ -41,16 +39,12 @@ describe('rabbitmq.js unit test', function () {
     it('should publish docker-health-check', function (done) {
       var testData = {
         dockerHost: 'testHost',
-        githubId: 1253543
+        githubId: '1253543'
       }
       rabbitClient.publishDockerHealthCheck(testData)
 
       expect(rabbitClient.publishTask
         .withArgs('docker-health-check').called).to.be.true()
-      expect(rabbitClient.publishTask
-        .args[0][1].timestamp).to.exist()
-      expect(rabbitClient.publishTask
-        .args[0][1].dockerHealthCheckId).to.exist()
       expect(rabbitClient.publishTask
         .args[0][1].dockerHost).to.equal(testData.dockerHost)
       expect(rabbitClient.publishTask
@@ -62,7 +56,7 @@ describe('rabbitmq.js unit test', function () {
     it('should throw if missing keys', function (done) {
       var testData = {
         dockerHost: 'testHost',
-        githubId: 1253543
+        githubId: '1253543'
       }
 
       Object.keys(testData).forEach(function (key) {
@@ -81,16 +75,12 @@ describe('rabbitmq.js unit test', function () {
     it('should publish on-dock-unhealthy', function (done) {
       var testData = {
         host: 'testHost',
-        githubId: 1253543
+        githubId: '1253543'
       }
       rabbitClient.publishOnDockUnhealthy(testData)
 
       expect(rabbitClient.publishTask
         .withArgs('on-dock-unhealthy').called).to.be.true()
-      expect(rabbitClient.publishTask
-        .args[0][1].timestamp).to.exist()
-      expect(rabbitClient.publishTask
-        .args[0][1].dockerHealthCheckId).to.exist()
       expect(rabbitClient.publishTask
         .args[0][1].host).to.equal(testData.host)
       expect(rabbitClient.publishTask
@@ -102,7 +92,7 @@ describe('rabbitmq.js unit test', function () {
     it('should throw if missing keys', function (done) {
       var testData = {
         host: 'testHost',
-        githubId: 1253543
+        githubId: '1253543'
       }
 
       Object.keys(testData).forEach(function (key) {
@@ -116,6 +106,114 @@ describe('rabbitmq.js unit test', function () {
       done()
     })
   }) // end publishOnDockUnhealthy
+
+  describe('publishDockExistsCheck', function () {
+    it('should publish dock.exists-check', function (done) {
+      var testData = {
+        host: 'testHost',
+        githubId: '1253543'
+      }
+      rabbitClient.publishDockExistsCheck(testData)
+
+      sinon.assert.calledOnce(rabbitClient.publishTask)
+      sinon.assert.calledWith(rabbitClient.publishTask,
+        'dock.exists-check',
+        testData
+      )
+
+      done()
+    })
+
+    it('should throw if missing keys', function (done) {
+      var testData = {
+        host: 'testHost',
+        githubId: '1253543'
+      }
+
+      Object.keys(testData).forEach(function (key) {
+        var test = clone(testData)
+        delete test[key]
+        expect(function () {
+          rabbitClient.publishDockExistsCheck(test)
+        }).to.throw()
+      })
+
+      done()
+    })
+  }) // end publishDockExistsCheck
+
+  describe('publishDockRemoved', function () {
+    it('should publish dock.removed', function (done) {
+      var testData = {
+        host: 'testHost',
+        githubId: '1253543'
+      }
+      rabbitClient.publishDockRemoved(testData)
+
+      sinon.assert.calledOnce(rabbitClient.publishEvent)
+      sinon.assert.calledWith(rabbitClient.publishEvent,
+        'dock.removed',
+        testData
+      )
+
+      done()
+    })
+
+    it('should throw if missing keys', function (done) {
+      var testData = {
+        host: 'testHost',
+        githubId: '1253543'
+      }
+
+      Object.keys(testData).forEach(function (key) {
+        var test = clone(testData)
+        delete test[key]
+        expect(function () {
+          rabbitClient.publishDockRemoved(test)
+        }).to.throw()
+      })
+
+      done()
+    })
+  }) // end publishDockRemoved
+
+  describe('publishASGCheckCreated', function () {
+    it('should publish asg.check-created', function (done) {
+      var testData = {
+        orgName: 'testHost',
+        githubId: '1253543',
+        createdAt: Date.now()
+      }
+      rabbitClient.publishASGCheckCreated(testData)
+
+      expect(rabbitClient.publishTask
+        .withArgs('asg.check-created').called).to.be.true()
+      expect(rabbitClient.publishTask
+        .args[0][1].host).to.equal(testData.host)
+      expect(rabbitClient.publishTask
+        .args[0][1].githubId).to.equal(testData.githubId)
+
+      done()
+    })
+
+    it('should throw if missing keys', function (done) {
+      var testData = {
+        orgName: 'testHost',
+        githubId: '1253543',
+        createdAt: Date.now()
+      }
+
+      Object.keys(testData).forEach(function (key) {
+        var test = clone(testData)
+        delete test[key]
+        expect(function () {
+          rabbitClient.publishASGCheckCreated(test)
+        }).to.throw()
+      })
+
+      done()
+    })
+  }) // end publishASGCheckCreated
 
   describe('_dataCheck', function () {
     it('should throw if missing keys', function (done) {

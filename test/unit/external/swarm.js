@@ -28,43 +28,13 @@ describe('swarm unit test', () => {
     done()
   })
 
-  describe('getNodes', () => {
-    beforeEach((done) => {
-      sinon.stub(SwarmClient.prototype, 'swarmInfoAsync')
-      done()
-    })
-
-    afterEach((done) => {
-      SwarmClient.prototype.swarmInfoAsync.restore()
-      done()
-    })
-
-    it('should get nodes event', (done) => {
-      SwarmClient.prototype.swarmInfoAsync.resolves({
-        parsedSystemStatus: {
-          ParsedNodes: {
-            one: { id: 1 },
-            two: { id: 2 }
-          }
-        }
-      })
-      docker.getNodes().asCallback((err, nodes) => {
-        if (err) { return done(err) }
-        sinon.assert.calledOnce(SwarmClient.prototype.swarmInfoAsync)
-
-        expect(nodes).to.deep.equal([{ id: 1 }, { id: 2 }])
-        done()
-      })
-    })
-  }) // end getNodes
-
   describe('getHostsWithOrgs', function () {
     beforeEach(function (done) {
       const info = {
         parsedSystemStatus: {
           ParsedNodes: [
             {
-              host: '127.0.0.1:4242',
+              Host: '127.0.0.1:4242',
               Labels: {
                 org: 27081
               }

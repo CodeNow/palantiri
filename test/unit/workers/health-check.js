@@ -2,89 +2,84 @@
 
 require('loadenv')()
 
-var Lab = require('lab')
-var lab = exports.lab = Lab.script()
-var describe = lab.describe
-var it = lab.it
-var afterEach = lab.afterEach
-var beforeEach = lab.beforeEach
-var Code = require('code')
-var expect = Code.expect
+const Lab = require('lab')
+const lab = exports.lab = Lab.script()
+const describe = lab.describe
+const it = lab.it
+const afterEach = lab.afterEach
+const beforeEach = lab.beforeEach
+const Code = require('code')
+const expect = Code.expect
 
-var sinon = require('sinon')
-var Promise = require('bluebird')
+const sinon = require('sinon')
+const Promise = require('bluebird')
 require('sinon-as-promised')(Promise)
+const ErrorCat = require('error-cat')
 
-var HealthCheck = require('../../../lib/workers/health-check')
-var rabbitmq = require('../../../lib/external/rabbitmq')
-var swarm = require('../../../lib/external/swarm')
+const HealthCheck = require('../../../lib/workers/health-check')
+const rabbitmq = require('../../../lib/external/rabbitmq')
+const swarm = require('../../../lib/external/swarm')
 
 describe('health-check.js unit test', function () {
   beforeEach(function (done) {
-    sinon.stub(swarm.prototype, 'getNodes')
+    sinon.stub(swarm.prototype, 'getHostsWithOrgs')
     sinon.stub(rabbitmq, 'publishDockerHealthCheck')
+    sinon.stub(ErrorCat, 'report')
     done()
   })
 
   afterEach(function (done) {
-    swarm.prototype.getNodes.restore()
+    swarm.prototype.getHostsWithOrgs.restore()
     rabbitmq.publishDockerHealthCheck.restore()
+    ErrorCat.report.restore()
     done()
   })
 
   it('should call publishDockerHealthCheck for each host', function (done) {
-    var testHosts = [{
-      Host: 'host1',
-      Labels: {
-        org: '11111'
-      }
+    const testHosts = [{
+      host: 'http://host1',
+      org: '11111'
     }, {
-      Host: 'host2',
-      Labels: {
-        org: '2222'
-      }
+      host: 'http://host2',
+      org: '2222'
     }, {
-      Host: 'host3',
-      Labels: {
-        org: '3333'
-      }
+      host: 'http://host3',
+      org: '3333'
     }]
-    swarm.prototype.getNodes.resolves(testHosts)
+    swarm.prototype.getHostsWithOrgs.resolves(testHosts)
     rabbitmq.publishDockerHealthCheck.returns()
 
     HealthCheck(null).asCallback(function (err) {
-      expect(err).to.not.exist()
-      expect(rabbitmq.publishDockerHealthCheck.withArgs({
-        dockerHost: 'https://host1',
-        githubId: 11111
-      }).called).to.be.true()
-      expect(rabbitmq.publishDockerHealthCheck.withArgs({
-        dockerHost: 'https://host2',
-        githubId: 2222
-      }).called).to.be.true()
-      expect(rabbitmq.publishDockerHealthCheck.withArgs({
-        dockerHost: 'https://host3',
-        githubId: 3333
-      }).called).to.be.true()
-
+      if (err) { done(err) }
+      sinon.assert.calledThrice(rabbitmq.publishDockerHealthCheck)
+      sinon.assert.calledWith(rabbitmq.publishDockerHealthCheck, {
+        dockerHost: 'http://host1',
+        githubId: '11111'
+      })
+      sinon.assert.calledWith(rabbitmq.publishDockerHealthCheck, {
+        dockerHost: 'http://host2',
+        githubId: '2222'
+      })
+      sinon.assert.calledWith(rabbitmq.publishDockerHealthCheck, {
+        dockerHost: 'http://host3',
+        githubId: '3333'
+      })
       done()
     })
   })
 
-  it('should use default if no githubId', function (done) {
+  it('should not error if node is malformed', function (done) {
     var testHosts = [{
-      Host: 'host1',
+      host: 'http://host1',
       Labels: {}
     }]
-    swarm.prototype.getNodes.resolves(testHosts)
-    rabbitmq.publishDockerHealthCheck.returns()
+    swarm.prototype.getHostsWithOrgs.resolves(testHosts)
+    rabbitmq.publishDockerHealthCheck.throws(new Error('bad'))
 
     HealthCheck(null).asCallback(function (err) {
-      expect(err).to.not.exist()
-      expect(rabbitmq.publishDockerHealthCheck.withArgs({
-        dockerHost: 'https://host1',
-        githubId: 'default'
-      }).called).to.be.true()
+      if (err) { done(err) }
+      sinon.assert.calledOnce(rabbitmq.publishDockerHealthCheck)
+      sinon.assert.calledOnce(ErrorCat.report)
 
       done()
     })
@@ -92,7 +87,7 @@ describe('health-check.js unit test', function () {
 
   it('should cb err', function (done) {
     var testErr = 'rock smash'
-    swarm.prototype.getNodes.rejects(testErr)
+    swarm.prototype.getHostsWithOrgs.rejects(testErr)
 
     HealthCheck(null).asCallback(function (err) {
       expect(err).to.exist()
