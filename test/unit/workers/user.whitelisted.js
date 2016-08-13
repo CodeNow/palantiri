@@ -10,63 +10,15 @@ var afterEach = lab.afterEach
 var beforeEach = lab.beforeEach
 
 const sinon = require('sinon')
-const chai = require('chai')
 
-const WorkerStopError = require('error-cat/errors/worker-stop-error')
 const rabbitmq = require('../../../lib/external/rabbitmq')
 
 // internal (being tested)
-const UserWhitelisted = require('../../../lib/workers/user-whitelisted')
+const UserWhitelisted = require('../../../lib/workers/user-whitelisted').task
 
-const assert = chai.assert
-chai.use(require('chai-as-promised'))
 require('sinon-as-promised')(require('bluebird'))
 
 describe('User Whitelisted Task', function () {
-  describe('Joi validation', function () {
-    it('should fail if empty', function () {
-      return assert.isRejected(UserWhitelisted())
-        .then(function (err) {
-          assert.instanceOf(err, WorkerStopError)
-          assert.include(err.message, 'Invalid Job')
-          assert.match(err.message, /job.*required/i)
-        })
-    })
-    it('should fail missing createdAt', function () {
-      return assert.isRejected(UserWhitelisted({
-        githubId: 123213,
-        orgName: 'asdasdasd'
-      }))
-        .then(function (err) {
-          assert.instanceOf(err, WorkerStopError)
-          assert.include(err.message, 'Invalid Job')
-          assert.match(err.message, /createdAt.*required/i)
-        })
-    })
-    it('should fail missing githubId', function () {
-      return assert.isRejected(UserWhitelisted({
-        createdAt: Math.floor(new Date().getTime() / 1000),
-        orgName: 'asdasdasd'
-      }))
-        .then(function (err) {
-          assert.instanceOf(err, WorkerStopError)
-          assert.include(err.message, 'Invalid Job')
-          assert.match(err.message, /githubid.*required/i)
-        })
-    })
-    it('should fail missing orgName', function () {
-      return assert.isRejected(UserWhitelisted({
-        createdAt: Math.floor(new Date().getTime() / 1000),
-        githubId: 123213
-      }))
-        .then(function (err) {
-          assert.instanceOf(err, WorkerStopError)
-          assert.include(err.message, 'Invalid Job')
-          assert.match(err.message, /orgname.*required/i)
-        })
-    })
-  })
-
   describe('Successful runs', function () {
     var org = 13801594
     beforeEach(function (done) {

@@ -35,7 +35,7 @@
     "loadenv": "^1.1.0",
     "moment": "^2.14.1",
     "monitor-dog": "^1.4.1",
-    "ponos": "^4.2.1",
+    "ponos": "^4.6.0",
     "sinon": "^1.16.1",
     "string-to-stream": "^1.0.1",
     "uuid": "^2.0.1"
