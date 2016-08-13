@@ -38,8 +38,7 @@ describe('rabbitmq.js unit test', function () {
   describe('publishDockerHealthCheck', function () {
     it('should publish docker-health-check', function (done) {
       var testData = {
-        dockerHost: 'testHost',
-        githubId: '1253543'
+        dockerHost: 'testHost'
       }
       rabbitClient.publishDockerHealthCheck(testData)
 
@@ -47,16 +46,13 @@ describe('rabbitmq.js unit test', function () {
         .withArgs('docker-health-check').called).to.be.true()
       expect(rabbitClient.publishTask
         .args[0][1].dockerHost).to.equal(testData.dockerHost)
-      expect(rabbitClient.publishTask
-        .args[0][1].githubId).to.equal(testData.githubId)
 
       done()
     })
 
     it('should throw if missing keys', function (done) {
       var testData = {
-        dockerHost: 'testHost',
-        githubId: '1253543'
+        dockerHost: 'testHost'
       }
 
       Object.keys(testData).forEach(function (key) {
@@ -74,8 +70,7 @@ describe('rabbitmq.js unit test', function () {
   describe('publishOnDockUnhealthy', function () {
     it('should publish on-dock-unhealthy', function (done) {
       var testData = {
-        host: 'testHost',
-        githubId: '1253543'
+        host: 'testHost'
       }
       rabbitClient.publishOnDockUnhealthy(testData)
 
@@ -83,16 +78,12 @@ describe('rabbitmq.js unit test', function () {
         .withArgs('on-dock-unhealthy').called).to.be.true()
       expect(rabbitClient.publishTask
         .args[0][1].host).to.equal(testData.host)
-      expect(rabbitClient.publishTask
-        .args[0][1].githubId).to.equal(testData.githubId)
-
       done()
     })
 
     it('should throw if missing keys', function (done) {
       var testData = {
-        host: 'testHost',
-        githubId: '1253543'
+        host: 'testHost'
       }
 
       Object.keys(testData).forEach(function (key) {
@@ -110,8 +101,7 @@ describe('rabbitmq.js unit test', function () {
   describe('publishDockExistsCheck', function () {
     it('should publish dock.exists-check', function (done) {
       var testData = {
-        host: 'testHost',
-        githubId: '1253543'
+        host: 'testHost'
       }
       rabbitClient.publishDockExistsCheck(testData)
 
@@ -126,8 +116,7 @@ describe('rabbitmq.js unit test', function () {
 
     it('should throw if missing keys', function (done) {
       var testData = {
-        host: 'testHost',
-        githubId: '1253543'
+        host: 'testHost'
       }
 
       Object.keys(testData).forEach(function (key) {
@@ -145,8 +134,7 @@ describe('rabbitmq.js unit test', function () {
   describe('publishDockRemoved', function () {
     it('should publish dock.removed', function (done) {
       var testData = {
-        host: 'testHost',
-        githubId: '1253543'
+        host: 'testHost'
       }
       rabbitClient.publishDockRemoved(testData)
 
@@ -161,8 +149,7 @@ describe('rabbitmq.js unit test', function () {
 
     it('should throw if missing keys', function (done) {
       var testData = {
-        host: 'testHost',
-        githubId: '1253543'
+        host: 'testHost'
       }
 
       Object.keys(testData).forEach(function (key) {
