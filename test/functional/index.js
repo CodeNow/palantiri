@@ -89,19 +89,20 @@ describe('functional test', function () {
 
     it('should emit unhealthy event if dock unhealthy', function (done) {
       process.env.RSS_LIMIT = 1
-      var testHost = 'http://localhost:4242'
+      const testHost = 'http://localhost:4242'
       swarm.prototype.getHostsWithOrgs.resolves([{
         host: 'http://localhost:4242',
         org: '1111'
       }])
-      stub = (job) => {
-        setTimeout(() => {
-          expect(job.host).to.equal(testHost)
-          done()
-        }, 10)
-      }
 
-      app.start()
+      app.start().asCallback(function () {
+        stub = (job) => {
+          setTimeout(() => {
+            expect(job.host).to.equal(testHost)
+            done()
+          }, 10)
+        }
+      })
     })
   })
 })
