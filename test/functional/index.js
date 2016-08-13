@@ -97,7 +97,6 @@ describe('functional test', function () {
       stub = (job) => {
         setTimeout(() => {
           expect(job.host).to.equal(testHost)
-          expect(job.githubId).to.equal('1111')
           done()
         }, 10)
       }
@@ -144,7 +143,6 @@ describe('Unhealthy Test', function () {
     stub = (job) => {
       setTimeout(() => {
         expect(job.host).to.equal(testHost)
-        expect(job.githubId).to.equal('1111')
         done()
       }, 10)
     }
