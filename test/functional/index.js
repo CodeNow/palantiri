@@ -84,7 +84,7 @@ describe('functional test', function () {
 
     afterEach(function (done) {
       rabbitmq.publishOnDockUnhealthy.restore()
-      app.stop(done)
+      app.stop().asCallback(done)
     })
 
     it('should emit unhealthy event if dock unhealthy', function (done) {
