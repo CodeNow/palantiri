@@ -2,22 +2,22 @@
 
 require('loadenv')()
 
-var Lab = require('lab')
-var lab = exports.lab = Lab.script()
-var describe = lab.describe
-var it = lab.it
-var afterEach = lab.afterEach
-var beforeEach = lab.beforeEach
-var Code = require('code')
-var expect = Code.expect
+const Lab = require('lab')
+const lab = exports.lab = Lab.script()
+const describe = lab.describe
+const it = lab.it
+const afterEach = lab.afterEach
+const beforeEach = lab.beforeEach
+const Code = require('code')
+const expect = Code.expect
 
-var sinon = require('sinon')
-var str = require('string-to-stream')
+const sinon = require('sinon')
+const str = require('string-to-stream')
 
-var Docker = require('../../../lib/external/docker.js')
+const Docker = require('../../../lib/external/docker.js')
 
 describe('docker.js unit test', function () {
-  var testHost = 'http://localhost:4242'
+  const testHost = 'http://localhost:4242'
   var docker
   beforeEach(function (done) {
     process.env.DOCKER_RETRY_ATTEMPTS = 2
@@ -33,7 +33,7 @@ describe('docker.js unit test', function () {
   })
 
   describe('pullImage', function () {
-    var testImage = 'runnable/libra'
+    const testImage = 'runnable/libra'
     beforeEach(function (done) {
       sinon.stub(docker.client, 'pull')
       sinon.stub(docker.client.modem, 'followProgress')
@@ -46,7 +46,7 @@ describe('docker.js unit test', function () {
     })
 
     it('should call pull', function (done) {
-      var testStream = 'thisisatest'
+      const testStream = 'thisisatest'
       docker.client.pull.yieldsAsync(null, testStream)
       docker.client.modem.followProgress.yieldsAsync(null)
 
@@ -62,7 +62,7 @@ describe('docker.js unit test', function () {
     })
 
     it('should retry if pull failed', function (done) {
-      var testStream = 'thisisatest'
+      const testStream = 'thisisatest'
       docker.client.pull.onCall(0).yieldsAsync('error')
       docker.client.pull.onCall(1).yieldsAsync(null, testStream)
       docker.client.modem.followProgress.yieldsAsync(null)
@@ -79,7 +79,7 @@ describe('docker.js unit test', function () {
     })
 
     it('should retry if followProgress failed', function (done) {
-      var testStream = 'thisisatest'
+      const testStream = 'thisisatest'
       docker.client.pull.yieldsAsync(null, testStream)
       docker.client.modem.followProgress.onCall(0).yieldsAsync('error')
       docker.client.modem.followProgress.onCall(1).yieldsAsync(null)
@@ -96,7 +96,7 @@ describe('docker.js unit test', function () {
     })
 
     it('should cb error if failed over retry count', function (done) {
-      var testError = 'explode'
+      const testError = 'explode'
       docker.client.pull.onCall(0).yieldsAsync(testError)
       docker.client.pull.onCall(1).yieldsAsync(testError)
       docker.pullImage(testImage).asCallback(function (err) {
@@ -120,8 +120,8 @@ describe('docker.js unit test', function () {
     })
 
     it('should call createContainer', function (done) {
-      var testRes = 'thisisatest'
-      var testArgs = 'testArg'
+      const testRes = 'thisisatest'
+      const testArgs = 'testArg'
       docker.client.createContainer.yieldsAsync(null, testRes)
       docker.createContainer(testArgs).asCallback(function (err, res) {
         expect(err).to.not.exist()
@@ -133,8 +133,8 @@ describe('docker.js unit test', function () {
     })
 
     it('should retry if failed', function (done) {
-      var testRes = 'thisisatest'
-      var testArgs = 'testArg'
+      const testRes = 'thisisatest'
+      const testArgs = 'testArg'
       docker.client.createContainer.onCall(0).yieldsAsync('error')
       docker.client.createContainer.onCall(1).yieldsAsync(null, testRes)
       docker.createContainer(testArgs).asCallback(function (err, res) {
@@ -147,8 +147,8 @@ describe('docker.js unit test', function () {
     })
 
     it('should cb error if failed over retry count', function (done) {
-      var testError = 'explode'
-      var testArgs = 'testArg'
+      const testError = 'explode'
+      const testArgs = 'testArg'
       docker.client.createContainer.onCall(0).yieldsAsync(testError)
       docker.client.createContainer.onCall(1).yieldsAsync(testError)
       docker.createContainer(testArgs).asCallback(function (err) {

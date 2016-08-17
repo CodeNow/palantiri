@@ -17,10 +17,9 @@ const sinon = require('sinon')
 // Internal
 const Swarm = require('../../../lib/external/swarm')
 const WorkerError = require('error-cat/errors/worker-error')
-const WorkerStopError = require('error-cat/errors/worker-stop-error')
 
 // internal (being tested)
-const CheckASGWasCreated = require('../../../lib/workers/asg.check-created')
+const CheckASGWasCreated = require('../../../lib/workers/asg.check-created').task
 
 const assert = chai.assert
 chai.use(require('chai-as-promised'))
@@ -38,49 +37,6 @@ describe('ASG Check Created Task', function () {
     done()
   })
 
-  describe('Joi validation', function () {
-    it('should fail if empty', function () {
-      return assert.isRejected(CheckASGWasCreated())
-        .then(function (err) {
-          assert.instanceOf(err, WorkerStopError)
-          assert.include(err.message, 'Invalid Job')
-          assert.match(err.message, /job.*required/i)
-        })
-    })
-    it('should fail missing createdAt', function () {
-      return assert.isRejected(CheckASGWasCreated({
-        githubId: 123213,
-        orgName: 'asdasdasd'
-      }))
-        .then(function (err) {
-          assert.instanceOf(err, WorkerStopError)
-          assert.include(err.message, 'Invalid Job')
-          assert.match(err.message, /createdat.*required/i)
-        })
-    })
-    it('should fail missing githubId', function () {
-      return assert.isRejected(CheckASGWasCreated({
-        createdAt: Math.floor(new Date().getTime() / 1000),
-        orgName: 'asdasdasd'
-      }))
-        .then(function (err) {
-          assert.instanceOf(err, WorkerStopError)
-          assert.include(err.message, 'Invalid Job')
-          assert.match(err.message, /githubid.*required/i)
-        })
-    })
-    it('should fail missing orgName', function () {
-      return assert.isRejected(CheckASGWasCreated({
-        createdAt: Math.floor(new Date().getTime() / 1000),
-        githubId: 123213
-      }))
-        .then(function (err) {
-          assert.instanceOf(err, WorkerStopError)
-          assert.include(err.message, 'Invalid Job')
-          assert.match(err.message, /orgname.*required/i)
-        })
-    })
-  })
   describe('testing the delay', function () {
     process.env.CHECK_ASG_CREATED_DELAY_IN_SEC = 100
     it('should throw WorkerError when not enough time has passed ', function () {

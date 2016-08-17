@@ -11,12 +11,11 @@ const ErrorCat = require('error-cat')
 const log = require('./lib/external/logger.js')()
 
 const app = new App()
-app.start(function (err) {
-  if (err) {
+app.start()
+  .catch((err) => {
     ErrorCat.report(new CriticalError(
       'server failed to start',
       { err: err }
     ))
-  }
-  log.fatal(err, 'app exited')
-})
+    log.fatal(err, 'app exited')
+  })

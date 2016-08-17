@@ -54,10 +54,10 @@ describe('functional test', function () {
 
   describe('health check', function () {
     beforeEach(function (done) {
-      app.start(done)
+      app.start().asCallback(done)
     })
     afterEach(function (done) {
-      app.stop(done)
+      app.stop().asCallback(done)
     })
     it('should run health check for docks', function (done) {
       swarm.prototype.getHostsWithOrgs.resolves([{
@@ -84,25 +84,25 @@ describe('functional test', function () {
 
     afterEach(function (done) {
       rabbitmq.publishOnDockUnhealthy.restore()
-      app.stop(done)
+      app.stop().asCallback(done)
     })
 
     it('should emit unhealthy event if dock unhealthy', function (done) {
       process.env.RSS_LIMIT = 1
-      var testHost = 'http://localhost:4242'
+      const testHost = 'http://localhost:4242'
       swarm.prototype.getHostsWithOrgs.resolves([{
         host: 'http://localhost:4242',
         org: '1111'
       }])
-      stub = (job) => {
-        setTimeout(() => {
-          expect(job.host).to.equal(testHost)
-          expect(job.githubId).to.equal('1111')
-          done()
-        }, 10)
-      }
 
-      app.start()
+      app.start().asCallback(function () {
+        stub = (job) => {
+          setTimeout(() => {
+            expect(job.host).to.equal(testHost)
+            done()
+          }, 10)
+        }
+      })
     })
   })
 })
@@ -124,7 +124,7 @@ describe('Unhealthy Test', function () {
       stub(data)
     })
     app = new App()
-    app.start(done)
+    app.start().asCallback(done)
   })
 
   afterEach(function (done) {
@@ -137,19 +137,18 @@ describe('Unhealthy Test', function () {
     Docker.prototype.pullImage.restore()
     rabbitmq.publishOnDockUnhealthy.restore()
     ErrorCat.report.restore()
-    app.stop(done)
+    app.stop().asCallback(done)
   })
 
   it('should emit unhealthy if start fails with out of memory error', function (done) {
     stub = (job) => {
       setTimeout(() => {
         expect(job.host).to.equal(testHost)
-        expect(job.githubId).to.equal('1111')
         done()
       }, 10)
     }
     process.env.RSS_LIMIT = 1
-    var testHost = 'http://localhost:4242'
+    const testHost = 'http://localhost:4242'
 
     swarm.prototype.getHostsWithOrgs.resolves([{
       host: 'http://localhost:4242',
