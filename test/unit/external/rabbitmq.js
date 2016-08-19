@@ -67,15 +67,15 @@ describe('rabbitmq.js unit test', function () {
     })
   }) // end publishDockerHealthCheck
 
-  describe('publishOnDockUnhealthy', function () {
-    it('should publish on-dock-unhealthy', function (done) {
+  describe('publishDockLost', function () {
+    it('should publish dock.lost', function (done) {
       var testData = {
         host: 'testHost'
       }
-      rabbitClient.publishOnDockUnhealthy(testData)
+      rabbitClient.publishDockLost(testData)
 
       expect(rabbitClient.publishTask
-        .withArgs('on-dock-unhealthy').called).to.be.true()
+        .withArgs('dock.lost').called).to.be.true()
       expect(rabbitClient.publishTask
         .args[0][1].host).to.equal(testData.host)
       done()
@@ -90,13 +90,13 @@ describe('rabbitmq.js unit test', function () {
         var test = clone(testData)
         delete test[key]
         expect(function () {
-          rabbitClient.publishOnDockUnhealthy(test)
+          rabbitClient.publishDockLost(test)
         }).to.throw()
       })
 
       done()
     })
-  }) // end publishOnDockUnhealthy
+  }) // end publishDockLost
 
   describe('publishDockExistsCheck', function () {
     it('should publish dock.exists-check', function (done) {
