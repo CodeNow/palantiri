@@ -1,20 +1,20 @@
 'use strict'
-
 require('loadenv')()
-
-const Lab = require('lab')
-const lab = exports.lab = Lab.script()
-const describe = lab.describe
-const it = lab.it
-const afterEach = lab.afterEach
-const beforeEach = lab.beforeEach
 const Code = require('code')
-const expect = Code.expect
-
+const Lab = require('lab')
+const Promise = require('bluebird')
 const sinon = require('sinon')
 const str = require('string-to-stream')
 
 const Docker = require('../../../lib/external/docker.js')
+
+const lab = exports.lab = Lab.script()
+
+const afterEach = lab.afterEach
+const beforeEach = lab.beforeEach
+const describe = lab.describe
+const expect = Code.expect
+const it = lab.it
 
 describe('docker.js unit test', function () {
   const testHost = 'http://localhost:4242'
@@ -34,23 +34,23 @@ describe('docker.js unit test', function () {
 
   describe('listImages', function () {
     beforeEach(function (done) {
-      sinon.stub(docker.client, 'listImages')
+      sinon.stub(docker, 'listImagesAsync')
       done()
     })
 
     afterEach(function (done) {
-      docker.client.listImages.restore()
+      docker.listImagesAsync.restore()
       done()
     })
 
     it('should call list images', function (done) {
-      docker.client.listImages.yieldsAsync()
+      docker.listImagesAsync.returns(Promise.resolve())
       docker.listImages().asCallback((err) => {
         if (err) { return done(err) }
-        sinon.assert.calledOnce(docker.client.listImages)
-        sinon.assert.calledWith(docker.client.listImages, {
+        sinon.assert.calledOnce(docker.listImagesAsync)
+        sinon.assert.calledWith(docker.listImagesAsync, {
           all: true
-        }, sinon.match.func)
+        })
         done()
       })
     })
