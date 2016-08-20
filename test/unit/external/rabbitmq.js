@@ -164,6 +164,39 @@ describe('rabbitmq.js unit test', function () {
     })
   }) // end publishDockRemoved
 
+  describe('publishPushImage', function () {
+    it('should publish image.push', function (done) {
+      var testData = {
+        imageTag: 'chill/fire:ice'
+      }
+      rabbitClient.publishPushImage(testData)
+
+      sinon.assert.calledOnce(rabbitClient.publishTask)
+      sinon.assert.calledWith(rabbitClient.publishTask,
+        'image.push',
+        testData
+      )
+
+      done()
+    })
+
+    it('should throw if missing keys', function (done) {
+      var testData = {
+        host: 'testHost'
+      }
+
+      Object.keys(testData).forEach(function (key) {
+        var test = clone(testData)
+        delete test[key]
+        expect(function () {
+          rabbitClient.publishPushImage(test)
+        }).to.throw()
+      })
+
+      done()
+    })
+  }) // end publishPushImage
+
   describe('publishASGCheckCreated', function () {
     it('should publish asg.check-created', function (done) {
       var testData = {
