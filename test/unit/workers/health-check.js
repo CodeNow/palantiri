@@ -50,7 +50,7 @@ describe('health-check.js unit test', function () {
     rabbitmq.publishTask.returns()
 
     HealthCheck(null).asCallback(function (err) {
-      if (err) { done(err) }
+      if (err) { return done(err) }
       sinon.assert.calledThrice(rabbitmq.publishTask)
       sinon.assert.calledWith(rabbitmq.publishTask, 'docker-health-check', {
         dockerHost: 'http://host1'
@@ -74,10 +74,21 @@ describe('health-check.js unit test', function () {
     rabbitmq.publishTask.throws(new Error('bad'))
 
     HealthCheck(null).asCallback(function (err) {
-      if (err) { done(err) }
+      if (err) { return done(err) }
       sinon.assert.calledOnce(rabbitmq.publishTask)
       sinon.assert.calledOnce(ErrorCat.report)
 
+      done()
+    })
+  })
+
+  it('should not publish anything', function (done) {
+    var testHosts = []
+    swarm.prototype.getHostsWithOrgs.resolves(testHosts)
+    HealthCheck(null).asCallback(function (err) {
+      if (err) { return done(err) }
+      sinon.assert.notCalled(rabbitmq.publishTask)
+      sinon.assert.notCalled(ErrorCat.report)
       done()
     })
   })
