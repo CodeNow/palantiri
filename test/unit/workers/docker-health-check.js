@@ -32,7 +32,7 @@ describe('docker-health-check.js unit test', function () {
     sinon.stub(Docker.prototype, 'startContainer').resolves()
     sinon.stub(Docker.prototype, 'containerLogs').resolves('{"id": "some-id"}')
     sinon.stub(Docker.prototype, 'removeContainer').resolves()
-    sinon.stub(rabbitmq, 'publishOnDockUnhealthy')
+    sinon.stub(rabbitmq, 'publishTask')
     done()
   })
 
@@ -43,7 +43,7 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.startContainer.restore()
     Docker.prototype.containerLogs.restore()
     Docker.prototype.removeContainer.restore()
-    rabbitmq.publishOnDockUnhealthy.restore()
+    rabbitmq.publishTask.restore()
     done()
   })
 
@@ -182,8 +182,8 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.containerLogs.resolves('{"error":"cannot allocate memory"}')
     DockerHealthCheck(testJob)
     .tap(function () {
-      sinon.assert.calledOnce(rabbitmq.publishOnDockUnhealthy)
-      sinon.assert.calledWith(rabbitmq.publishOnDockUnhealthy, {
+      sinon.assert.calledOnce(rabbitmq.publishTask)
+      sinon.assert.calledWith(rabbitmq.publishTask, 'on-dock-unhealthy', {
         host: 'http://10.20.0.1'
       })
     })
@@ -194,7 +194,7 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.containerLogs.resolves('{"error":"some error"}')
     DockerHealthCheck(testJob)
     .tap(function () {
-      sinon.assert.notCalled(rabbitmq.publishOnDockUnhealthy)
+      sinon.assert.notCalled(rabbitmq.publishTask)
     })
     .asCallback(done)
   })
@@ -203,8 +203,8 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 2}}')
     DockerHealthCheck(testJob)
     .tap(function () {
-      sinon.assert.calledOnce(rabbitmq.publishOnDockUnhealthy)
-      sinon.assert.calledWith(rabbitmq.publishOnDockUnhealthy, {
+      sinon.assert.calledOnce(rabbitmq.publishTask)
+      sinon.assert.calledWith(rabbitmq.publishTask, 'on-dock-unhealthy', {
         host: 'http://10.20.0.1'
       })
     })
@@ -215,7 +215,7 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 0.8}}')
     DockerHealthCheck(testJob)
     .tap(function () {
-      sinon.assert.notCalled(rabbitmq.publishOnDockUnhealthy)
+      sinon.assert.notCalled(rabbitmq.publishTask)
     })
     .asCallback(done)
   })

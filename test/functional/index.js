@@ -76,14 +76,14 @@ describe('functional test', function () {
   describe('dock unhealthy', function () {
     let stub
     beforeEach(function (done) {
-      sinon.stub(rabbitmq, 'publishOnDockUnhealthy', function (data) {
+      sinon.stub(rabbitmq, 'publishTask', function (data) {
         stub(data)
       })
       done()
     })
 
     afterEach(function (done) {
-      rabbitmq.publishOnDockUnhealthy.restore()
+      rabbitmq.publishTask.restore()
       app.stop().asCallback(done)
     })
 
@@ -120,7 +120,7 @@ describe('Unhealthy Test', function () {
     sinon.stub(ErrorCat, 'report')
     sinon.stub(Docker.prototype, 'pullImage').resolves(null)
     sinon.stub(swarm.prototype, 'getHostsWithOrgs')
-    sinon.stub(rabbitmq, 'publishOnDockUnhealthy', function (data) {
+    sinon.stub(rabbitmq, 'publishTask', function (data) {
       stub(data)
     })
     app = new App()
@@ -135,7 +135,7 @@ describe('Unhealthy Test', function () {
     Docker.prototype.startContainer.restore()
     Docker.prototype.containerLogs.restore()
     Docker.prototype.pullImage.restore()
-    rabbitmq.publishOnDockUnhealthy.restore()
+    rabbitmq.publishTask.restore()
     ErrorCat.report.restore()
     app.stop().asCallback(done)
   })
