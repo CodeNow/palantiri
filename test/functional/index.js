@@ -7,6 +7,7 @@ const ErrorCat = require('error-cat')
 const Lab = require('lab')
 const Promise = require('bluebird')
 const sinon = require('sinon')
+const Publisher = require('ponos/lib/rabbitmq')
 
 const App = require('../../lib/app.js')
 const Docker = require('../../lib/external/docker.js')
@@ -22,6 +23,9 @@ const describe = lab.describe
 const expect = Code.expect
 const it = lab.it
 
+const testPublisher = new Publisher({
+  events: ['user.whitelisted', 'dock.disk.filled']
+})
 describe('functional test', function () {
   var app
 
@@ -36,7 +40,7 @@ describe('functional test', function () {
     sinon.stub(Docker.prototype, 'pullImage').resolves(null)
     sinon.stub(swarm.prototype, 'getHostsWithOrgs')
     app = new App()
-    done()
+    testPublisher.connect().asCallback(done)
   })
 
   afterEach(function (done) {
@@ -49,7 +53,7 @@ describe('functional test', function () {
     Docker.prototype.containerLogs.restore()
     Docker.prototype.pullImage.restore()
     ErrorCat.report.restore()
-    done()
+    testPublisher.disconnect().asCallback(done)
   })
 
   describe('health check', function () {
@@ -75,9 +79,13 @@ describe('functional test', function () {
 
   describe('dock unhealthy', function () {
     let stub
+    const orignialPublish = rabbitmq.publishTask
     beforeEach(function (done) {
-      sinon.stub(rabbitmq, 'publishTask', function (data) {
-        stub(data)
+      sinon.stub(rabbitmq, 'publishTask', (name, data) => {
+        if (name === 'on-dock-unhealthy') {
+          return stub(data)
+        }
+        orignialPublish.call(rabbitmq, name, data)
       })
       done()
     })
@@ -95,14 +103,13 @@ describe('functional test', function () {
         org: '1111'
       }])
 
-      app.start().asCallback(function () {
-        stub = (job) => {
-          setTimeout(() => {
-            expect(job.host).to.equal(testHost)
-            done()
-          }, 10)
-        }
-      })
+      stub = (job) => {
+        setTimeout(() => {
+          expect(job.host).to.equal(testHost)
+          done()
+        }, 10)
+      }
+      app.start()
     })
   })
 })
@@ -110,7 +117,7 @@ describe('functional test', function () {
 describe('Unhealthy Test', function () {
   var app
   let stub
-
+  const orignialPublish = rabbitmq.publishTask
   beforeEach(function (done) {
     process.env.COLLECT_INTERVAL = 100000
     process.env.RSS_LIMIT = 2000
@@ -120,8 +127,11 @@ describe('Unhealthy Test', function () {
     sinon.stub(ErrorCat, 'report')
     sinon.stub(Docker.prototype, 'pullImage').resolves(null)
     sinon.stub(swarm.prototype, 'getHostsWithOrgs')
-    sinon.stub(rabbitmq, 'publishTask', function (data) {
-      stub(data)
+    sinon.stub(rabbitmq, 'publishTask', (name, data) => {
+      if (name === 'on-dock-unhealthy') {
+        return stub(data)
+      }
+      orignialPublish.call(rabbitmq, name, data)
     })
     app = new App()
     app.start().asCallback(done)

@@ -121,7 +121,6 @@ describe('docker.js unit test', function () {
       const testError = 'someerror'
       pushStub.push.yieldsAsync(testError)
       docker.pushImage(testImage).asCallback(function (err) {
-        console.log('err', err)
         expect(err.message).to.equal(testError)
         done()
       })
