@@ -77,12 +77,12 @@ describe('functional test', function () {
     })
   })
 
-  describe('dock unhealthy', function () {
+  describe('dock lost', function () {
     let stub
     const orignialPublish = rabbitmq.publishTask
     beforeEach(function (done) {
       sinon.stub(rabbitmq, 'publishTask', (name, data) => {
-        if (name === 'on-dock-unhealthy') {
+        if (name === 'dock.lost') {
           return stub(data)
         }
         orignialPublish.call(rabbitmq, name, data)
@@ -95,7 +95,7 @@ describe('functional test', function () {
       app.stop().asCallback(done)
     })
 
-    it('should emit unhealthy event if dock unhealthy', function (done) {
+    it('should emit `dock.lost` event if dock was lost', function (done) {
       process.env.RSS_LIMIT = 1
       const testHost = 'http://localhost:4242'
       swarm.prototype.getHostsWithOrgs.resolves([{
@@ -128,7 +128,7 @@ describe('Unhealthy Test', function () {
     sinon.stub(Docker.prototype, 'pullImage').resolves(null)
     sinon.stub(swarm.prototype, 'getHostsWithOrgs')
     sinon.stub(rabbitmq, 'publishTask', (name, data) => {
-      if (name === 'on-dock-unhealthy') {
+      if (name === 'dock.lost') {
         return stub(data)
       }
       orignialPublish.call(rabbitmq, name, data)

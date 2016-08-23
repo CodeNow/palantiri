@@ -178,19 +178,19 @@ describe('docker-health-check.js unit test', function () {
     })
   })
 
-  it('should publish on-healthy event if logs has "cannot allocate memory" msg', function (done) {
+  it('should publish dock.lost event if logs has "cannot allocate memory" msg', function (done) {
     Docker.prototype.containerLogs.resolves('{"error":"cannot allocate memory"}')
     DockerHealthCheck(testJob)
     .tap(function () {
       sinon.assert.calledOnce(rabbitmq.publishTask)
-      sinon.assert.calledWith(rabbitmq.publishTask, 'on-dock-unhealthy', {
+      sinon.assert.calledWith(rabbitmq.publishTask, 'dock.lost', {
         host: 'http://10.20.0.1'
       })
     })
     .asCallback(done)
   })
 
-  it('should not publish on-healthy event if logs has no "cannot allocate memory" msg', function (done) {
+  it('should not publish dock.lost event if logs has no "cannot allocate memory" msg', function (done) {
     Docker.prototype.containerLogs.resolves('{"error":"some error"}')
     DockerHealthCheck(testJob)
     .tap(function () {
@@ -199,19 +199,19 @@ describe('docker-health-check.js unit test', function () {
     .asCallback(done)
   })
 
-  it('should publish on-healthy event if too much memory used', function (done) {
+  it('should publish dock.lost event if too much memory used', function (done) {
     Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 2}}')
     DockerHealthCheck(testJob)
     .tap(function () {
       sinon.assert.calledOnce(rabbitmq.publishTask)
-      sinon.assert.calledWith(rabbitmq.publishTask, 'on-dock-unhealthy', {
+      sinon.assert.calledWith(rabbitmq.publishTask, 'dock.lost', {
         host: 'http://10.20.0.1'
       })
     })
     .asCallback(done)
   })
 
-  it('should not publish on-healthy event if not much memory used', function (done) {
+  it('should not publish dock.lost event if not much memory used', function (done) {
     Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 0.8}}')
     DockerHealthCheck(testJob)
     .tap(function () {

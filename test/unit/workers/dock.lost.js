@@ -7,7 +7,7 @@ const Lab = require('lab')
 const Promise = require('bluebird')
 const sinon = require('sinon')
 
-const OnDockUnhealthy = require('../../../lib/workers/on-dock-unhealthy').task
+const DockLost = require('../../../lib/workers/dock.lost').task
 const rabbitmq = require('../../../lib/external/rabbitmq')
 
 require('sinon-as-promised')(Promise)
@@ -18,7 +18,7 @@ const beforeEach = lab.beforeEach
 const describe = lab.describe
 const it = lab.it
 
-describe('health-check.js unit test', function () {
+describe('dock.lost unit test', function () {
   beforeEach(function (done) {
     sinon.stub(rabbitmq, 'publishTask')
     sinon.stub(ErrorCat, 'report')
@@ -37,7 +37,7 @@ describe('health-check.js unit test', function () {
     }
     rabbitmq.publishTask.returns()
 
-    OnDockUnhealthy(testJob).asCallback(function (err) {
+    DockLost(testJob).asCallback(function (err) {
       if (err) { done(err) }
       sinon.assert.calledOnce(rabbitmq.publishTask)
       sinon.assert.calledWith(rabbitmq.publishTask, 'dock.exists-check', testJob)
