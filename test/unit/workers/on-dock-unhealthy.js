@@ -20,27 +20,27 @@ const it = lab.it
 
 describe('health-check.js unit test', function () {
   beforeEach(function (done) {
-    sinon.stub(rabbitmq, 'publishDockExistsCheck')
+    sinon.stub(rabbitmq, 'publishTask')
     sinon.stub(ErrorCat, 'report')
     done()
   })
 
   afterEach(function (done) {
-    rabbitmq.publishDockExistsCheck.restore()
+    rabbitmq.publishTask.restore()
     ErrorCat.report.restore()
     done()
   })
 
-  it('should call publishDockExistsCheck for host', function (done) {
+  it('should call publishTask for host', function (done) {
     const testJob = {
       host: 'http://10.0.0.02:4242'
     }
-    rabbitmq.publishDockExistsCheck.returns()
+    rabbitmq.publishTask.returns()
 
     OnDockUnhealthy(testJob).asCallback(function (err) {
       if (err) { done(err) }
-      sinon.assert.calledOnce(rabbitmq.publishDockExistsCheck)
-      sinon.assert.calledWith(rabbitmq.publishDockExistsCheck, testJob)
+      sinon.assert.calledOnce(rabbitmq.publishTask)
+      sinon.assert.calledWith(rabbitmq.publishTask, 'dock.exists-check', testJob)
       done()
     })
   })
