@@ -23,20 +23,20 @@ const it = lab.it
 describe('dock.exists-check.js unit test', () => {
   const testJob = {
     host: '10.0.0.2:4242',
-    Docker: 'chill/fire:ice'
+    imageTag: 'chill/fire:ice'
   }
 
   beforeEach((done) => {
     sinon.stub(Swarm.prototype, 'swarmHostExistsAsync')
     sinon.stub(Docker.prototype, 'pushImage')
-    sinon.stub(rabbitmq, 'publishImageTask')
+    sinon.stub(rabbitmq, 'publishTask')
     done()
   })
 
   afterEach((done) => {
     Swarm.prototype.swarmHostExistsAsync.restore()
     Docker.prototype.pushImage.restore()
-    rabbitmq.publishImageTask.restore()
+    rabbitmq.publishTask.restore()
     done()
   })
 
@@ -58,11 +58,11 @@ describe('dock.exists-check.js unit test', () => {
       sinon.assert.callOrder(
         Swarm.prototype.swarmHostExistsAsync,
         Docker.prototype.pushImage,
-        rabbitmq.publishImageTask
+        rabbitmq.publishTask
       )
       sinon.assert.calledWith(Swarm.prototype.swarmHostExistsAsync, testJob.host)
-      sinon.assert.calledWith(Docker.prototype.swarmHostExistsAsync, testJob.Docker)
-      sinon.assert.calledWith(Swarm.prototype.swarmHostExistsAsync, testJob)
+      sinon.assert.calledWith(Docker.prototype.pushImage, testJob.imageTag)
+      sinon.assert.calledWith(rabbitmq.publishTask, 'image.remove', testJob)
       done()
     })
   })
