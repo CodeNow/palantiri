@@ -11,7 +11,7 @@ Palantiri is responsible monitoring health of Runnable services. It's primary re
 1. Create health-check jobs on a regular basis
 2. Handle health-check jobs by creating check jobs per service/host
 3. Handle health-checks for particular services as needed
-4. Create unhealthy jobs if the service checked is unhealthy
+4. Create `dock.lost` jobs if the service checked is `dock.lost`
 
 Palantiri currently only handles dock health checks, but will be expanded to monitor all runnable services
 
@@ -36,7 +36,7 @@ Creates jobs per each service which require a health check.
 Currently creates a docker-health-check job per docker host
 
 ##### `docker-health-check`
-Checks the health of a dock and publishes on-dock-unhealthy if checks fail
+Checks the health of a dock and publishes `dock.lost` if checks fail
 required data: { host: 'http:localhost:4242', githubId: '23984567' }
 
 ##### `user-whitelisted`

@@ -73,21 +73,21 @@ describe('functional test', function () {
     })
   })
 
-  describe('dock unhealthy', function () {
+  describe('dock lost', function () {
     let stub
     beforeEach(function (done) {
-      sinon.stub(rabbitmq, 'publishOnDockUnhealthy', function (data) {
+      sinon.stub(rabbitmq, 'publishDockLost', function (data) {
         stub(data)
       })
       done()
     })
 
     afterEach(function (done) {
-      rabbitmq.publishOnDockUnhealthy.restore()
+      rabbitmq.publishDockLost.restore()
       app.stop().asCallback(done)
     })
 
-    it('should emit unhealthy event if dock unhealthy', function (done) {
+    it('should emit `dock.lost` event if dock was lost', function (done) {
       process.env.RSS_LIMIT = 1
       const testHost = 'http://localhost:4242'
       swarm.prototype.getHostsWithOrgs.resolves([{
@@ -120,7 +120,7 @@ describe('Unhealthy Test', function () {
     sinon.stub(ErrorCat, 'report')
     sinon.stub(Docker.prototype, 'pullImage').resolves(null)
     sinon.stub(swarm.prototype, 'getHostsWithOrgs')
-    sinon.stub(rabbitmq, 'publishOnDockUnhealthy', function (data) {
+    sinon.stub(rabbitmq, 'publishDockLost', function (data) {
       stub(data)
     })
     app = new App()
@@ -135,7 +135,7 @@ describe('Unhealthy Test', function () {
     Docker.prototype.startContainer.restore()
     Docker.prototype.containerLogs.restore()
     Docker.prototype.pullImage.restore()
-    rabbitmq.publishOnDockUnhealthy.restore()
+    rabbitmq.publishDockLost.restore()
     ErrorCat.report.restore()
     app.stop().asCallback(done)
   })
