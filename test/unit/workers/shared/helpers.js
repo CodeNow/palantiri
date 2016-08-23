@@ -58,17 +58,11 @@ describe('helpers unit test', function () {
       done()
     })
 
-    it('should not throw if success', function (done) {
+    it('should throw original error', function (done) {
+      const testError = new Error('Red River')
       expect(() => {
-        Helpers.handleDockerError({statusCode: 200})
-      }).to.not.throw()
-      done()
-    })
-
-    it('should not throw if no error', function (done) {
-      expect(() => {
-        Helpers.handleDockerError()
-      }).to.not.throw()
+        Helpers.handleDockerError(testError)
+      }).to.throw(Error, testError)
       done()
     })
   }) // end handleDockerError
