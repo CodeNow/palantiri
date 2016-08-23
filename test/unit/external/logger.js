@@ -1,30 +1,50 @@
 'use strict'
-
 require('loadenv')()
+const cls = require('continuation-local-storage').createNamespace('ponos')
+const Code = require('code')
+const Lab = require('lab')
 
-var Lab = require('lab')
-var lab = exports.lab = Lab.script()
-var describe = lab.describe
-var it = lab.it
-var beforeEach = lab.beforeEach
-var Code = require('code')
-var expect = Code.expect
+const lab = exports.lab = Lab.script()
+
+const describe = lab.describe
+const expect = Code.expect
+const it = lab.it
+
+const logger = require('../../../lib/external/logger.js')
 
 describe('logger.js unit test', function () {
-  beforeEach(function (done) {
-    // delete to ensure test runs
-    delete require.cache[require.resolve('../../../lib/external/logger.js')]
-    done()
-  })
-
   describe('loading', function () {
     it('should create logger', function (done) {
-      var log = require('../../../lib/external/logger.js')()
+      const log = logger()
       expect(log.trace).to.exist()
       expect(log.info).to.exist()
       expect(log.error).to.exist()
       expect(log.fatal).to.exist()
       done()
     })
-  }) // end createContainer
+
+    it('should add props to logger', function (done) {
+      const log = logger({test: 'prop'})
+      expect(log.fields.test).to.equal('prop')
+      done()
+    })
+  }) // end loading
+  describe('serializers', function () {
+    const serializers = logger().serializers
+    it('should use ponos namespace', function (done) {
+      const testId = 'blue is good'
+      cls.run(() => {
+        cls.set('tid', testId)
+        const out = serializers.tx()
+        expect(out.tid).to.equal(testId)
+        done()
+      })
+    })
+
+    it('should not error if no namespace', function (done) {
+      const out = serializers.tx()
+      expect(out).to.be.undefined()
+      done()
+    })
+  }) // end serializers
 })

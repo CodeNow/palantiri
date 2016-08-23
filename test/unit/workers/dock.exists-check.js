@@ -29,7 +29,7 @@ describe('dock.exists-check.js unit test', () => {
     process.env.RSS_LIMIT = 1
     sinon.stub(BaseDockerClient.prototype, 'killContainerAsync')
     sinon.stub(Swarm.prototype, 'swarmHostExistsAsync')
-    sinon.stub(rabbitmq, 'publishDockRemoved')
+    sinon.stub(rabbitmq, 'publishEvent')
     done()
   })
 
@@ -37,14 +37,14 @@ describe('dock.exists-check.js unit test', () => {
     delete process.env.RSS_LIMIT
     BaseDockerClient.prototype.killContainerAsync.restore()
     Swarm.prototype.swarmHostExistsAsync.restore()
-    rabbitmq.publishDockRemoved.restore()
+    rabbitmq.publishEvent.restore()
     done()
   })
 
   it('should call killContainerAsync', (done) => {
     BaseDockerClient.prototype.killContainerAsync.returns(Promise.resolve())
     Swarm.prototype.swarmHostExistsAsync.returns()
-    rabbitmq.publishDockRemoved.returns()
+    rabbitmq.publishEvent.returns()
     DockExistsCheck(testJob).asCallback((err) => {
       if (err) { return done(err) }
 
@@ -57,7 +57,7 @@ describe('dock.exists-check.js unit test', () => {
   it('should call swarmHostExistsAsync', (done) => {
     BaseDockerClient.prototype.killContainerAsync.returns(Promise.resolve())
     Swarm.prototype.swarmHostExistsAsync.returns()
-    rabbitmq.publishDockRemoved.returns()
+    rabbitmq.publishEvent.returns()
     DockExistsCheck(testJob).asCallback((err) => {
       if (err) { return done(err) }
 
@@ -70,7 +70,7 @@ describe('dock.exists-check.js unit test', () => {
   it('should call swarmHostExistsAsync if kill failed', (done) => {
     BaseDockerClient.prototype.killContainerAsync.rejects('failed')
     Swarm.prototype.swarmHostExistsAsync.returns()
-    rabbitmq.publishDockRemoved.returns()
+    rabbitmq.publishEvent.returns()
     DockExistsCheck(testJob).asCallback((err) => {
       if (err) { return done(err) }
 
@@ -86,19 +86,19 @@ describe('dock.exists-check.js unit test', () => {
     DockExistsCheck(testJob).asCallback((err) => {
       expect(err).instanceOf(WorkerError)
 
-      sinon.assert.notCalled(rabbitmq.publishDockRemoved)
+      sinon.assert.notCalled(rabbitmq.publishEvent)
       done()
     })
   })
 
-  it('should publishDockRemoved if not exists', (done) => {
+  it('should publishEvent if not exists', (done) => {
     BaseDockerClient.prototype.killContainerAsync.resolves()
     Swarm.prototype.swarmHostExistsAsync.resolves(false)
     DockExistsCheck(testJob).asCallback((err) => {
       if (err) { return done(err) }
 
-      sinon.assert.calledOnce(rabbitmq.publishDockRemoved)
-      sinon.assert.calledWith(rabbitmq.publishDockRemoved, testJob)
+      sinon.assert.calledOnce(rabbitmq.publishEvent)
+      sinon.assert.calledWith(rabbitmq.publishEvent, 'dock.removed', testJob)
       done()
     })
   })
