@@ -54,7 +54,14 @@ describe('helpers unit test', function () {
     it('should throw WorkerStopError if 404', function (done) {
       expect(() => {
         Helpers.handleDockerError({statusCode: 404})
-      }).to.throw(WorkerStopError)
+      }).to.throw(WorkerStopError, 'does not exist')
+      done()
+    })
+
+    it('should throw WorkerStopError if 409', function (done) {
+      expect(() => {
+        Helpers.handleDockerError({statusCode: 409})
+      }).to.throw(WorkerStopError, 'image still in use')
       done()
     })
 

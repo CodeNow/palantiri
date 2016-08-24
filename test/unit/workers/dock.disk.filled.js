@@ -114,4 +114,21 @@ describe('dock.exists-check.js unit test', () => {
       done()
     })
   })
+
+  it('should publish remove for untagged container', (done) => {
+    const testId = 'blue cat'
+    Docker.prototype.listImages.resolves([{
+      Id: testId,
+      RepoTags: ['<none>:<none>']
+    }])
+    Worker(testJob).asCallback((err) => {
+      if (err) { return done(err) }
+      sinon.assert.calledOnce(rabbitmq.publishTask)
+      sinon.assert.calledWith(rabbitmq.publishTask, 'image.remove', {
+        imageTag: testId,
+        host: testJob.host
+      })
+      done()
+    })
+  })
 })
