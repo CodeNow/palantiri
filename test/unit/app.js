@@ -28,14 +28,14 @@ describe('app.js unit test', function () {
     beforeEach(function (done) {
       sinon.stub(rabbitClient, 'connect').resolves()
       sinon.stub(workerServer, 'start').resolves()
-      sinon.stub(rabbitClient, 'publishHealthCheck')
+      sinon.stub(rabbitClient, 'publishTask')
       process.env.COLLECT_INTERVAL = 1
       done()
     })
 
     afterEach(function (done) {
       rabbitClient.connect.restore()
-      rabbitClient.publishHealthCheck.restore()
+      rabbitClient.publishTask.restore()
       workerServer.start.restore()
       delete process.env.COLLECT_INTERVAL
       if (app.interval) {
@@ -45,14 +45,14 @@ describe('app.js unit test', function () {
     })
 
     it('should setup service', function (done) {
-      rabbitClient.publishHealthCheck.returns()
+      rabbitClient.publishTask.returns()
 
       app.start().asCallback(function (err) {
         expect(err).to.not.exist()
         expect(rabbitClient.connect.called).to.be.true()
         expect(app.interval).to.exist()
         setTimeout(function () {
-          expect(rabbitClient.publishHealthCheck.callCount)
+          expect(rabbitClient.publishTask.callCount)
             .to.be.above(1)
           done()
         }, 10)
@@ -66,7 +66,7 @@ describe('app.js unit test', function () {
       app.start().asCallback(function (err) {
         expect(err).to.exist()
         expect(rabbitClient.connect.called).to.be.true()
-        expect(rabbitClient.publishHealthCheck.called).to.be.false()
+        expect(rabbitClient.publishTask.called).to.be.false()
         expect(app.interval).to.not.exist()
 
         done()

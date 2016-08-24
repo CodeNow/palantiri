@@ -22,11 +22,11 @@ describe('User Whitelisted Task', function () {
   describe('Successful runs', function () {
     var org = 13801594
     beforeEach(function (done) {
-      sinon.stub(rabbitmq, 'publishASGCheckCreated').returns()
+      sinon.stub(rabbitmq, 'publishTask').returns()
       done()
     })
     afterEach(function (done) {
-      rabbitmq.publishASGCheckCreated.restore()
+      rabbitmq.publishTask.restore()
       done()
     })
 
@@ -38,9 +38,10 @@ describe('User Whitelisted Task', function () {
       }
       return UserWhitelisted(job)
         .then(function () {
-          sinon.assert.calledOnce(rabbitmq.publishASGCheckCreated)
+          sinon.assert.calledOnce(rabbitmq.publishTask)
           sinon.assert.calledWithExactly(
-            rabbitmq.publishASGCheckCreated,
+            rabbitmq.publishTask,
+            'asg.check-created',
             job
           )
         })

@@ -29,7 +29,7 @@ describe('dock.exists-check.js unit test', () => {
     process.env.USER_REGISTRY = 'local'
     sinon.stub(Docker.prototype, 'listImages')
     sinon.stub(Swarm.prototype, 'swarmHostExistsAsync')
-    sinon.stub(rabbitmq, 'publishPushImage')
+    sinon.stub(rabbitmq, 'publishTask')
     done()
   })
 
@@ -37,7 +37,7 @@ describe('dock.exists-check.js unit test', () => {
     delete process.env.USER_REGISTRY
     Docker.prototype.listImages.restore()
     Swarm.prototype.swarmHostExistsAsync.restore()
-    rabbitmq.publishPushImage.restore()
+    rabbitmq.publishTask.restore()
     done()
   })
 
@@ -56,7 +56,7 @@ describe('dock.exists-check.js unit test', () => {
     Docker.prototype.listImages.returns(Promise.resolve([{}]))
     Worker(testJob).asCallback((err) => {
       if (err) { return done(err) }
-      sinon.assert.notCalled(rabbitmq.publishPushImage)
+      sinon.assert.notCalled(rabbitmq.publishTask)
       done()
     })
   })
@@ -68,7 +68,7 @@ describe('dock.exists-check.js unit test', () => {
     }]))
     Worker(testJob).asCallback((err) => {
       if (err) { return done(err) }
-      sinon.assert.notCalled(rabbitmq.publishPushImage)
+      sinon.assert.notCalled(rabbitmq.publishTask)
       done()
     })
   })
@@ -81,8 +81,8 @@ describe('dock.exists-check.js unit test', () => {
     }]))
     Worker(testJob).asCallback((err) => {
       if (err) { return done(err) }
-      sinon.assert.calledOnce(rabbitmq.publishPushImage)
-      sinon.assert.calledWith(rabbitmq.publishPushImage, {
+      sinon.assert.calledOnce(rabbitmq.publishTask)
+      sinon.assert.calledWith(rabbitmq.publishTask, 'image.push', {
         imageTag: testImage
       })
       done()
@@ -100,7 +100,7 @@ describe('dock.exists-check.js unit test', () => {
       sinon.assert.callOrder(
         Swarm.prototype.swarmHostExistsAsync,
         Docker.prototype.listImages,
-        rabbitmq.publishPushImage
+        rabbitmq.publishTask
         )
       done()
     })
@@ -119,11 +119,11 @@ describe('dock.exists-check.js unit test', () => {
     }]))
     Worker(testJob).asCallback((err) => {
       if (err) { return done(err) }
-      sinon.assert.calledTwice(rabbitmq.publishPushImage)
-      sinon.assert.calledWith(rabbitmq.publishPushImage, {
+      sinon.assert.calledTwice(rabbitmq.publishTask)
+      sinon.assert.calledWith(rabbitmq.publishTask, 'image.push', {
         imageTag: testImage1
       })
-      sinon.assert.calledWith(rabbitmq.publishPushImage, {
+      sinon.assert.calledWith(rabbitmq.publishTask, 'image.push', {
         imageTag: testImage2
       })
       done()

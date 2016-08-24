@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "lint": "standard --verbose",
-    "test": "npm run lint && NODE_ENV=test lab -vc -m 7000 ./test"
+    "test": "npm run lint && NODE_ENV=test lab -vc -m 7000 -t 100 ./test"
   },
   "repository": {
     "type": "git",
@@ -25,28 +25,27 @@
   "dependencies": {
     "101": "^1.5.0",
     "@runnable/loki": "^3.1.0",
-    "async": "^1.4.2",
+    "async": "^2.0.1",
     "bluebird": "^3.4.1",
     "bunyan": "^1.5.0",
     "callsite": "^1.0.0",
     "continuation-local-storage": "^3.1.7",
     "error-cat": "^3.0.0",
-    "joi": "^9.0.0",
+    "joi": "^9.0.4",
     "keypather": "^2.0.0",
-    "loadenv": "^1.1.0",
+    "loadenv": "^2.2.0",
     "moment": "^2.14.1",
     "monitor-dog": "^1.4.1",
-    "ponos": "^4.6.0",
+    "ponos": "^5.1.0",
     "sinon": "^1.16.1",
-    "string-to-stream": "^1.0.1",
-    "uuid": "^2.0.1"
+    "string-to-stream": "^1.0.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
-    "code": "^1.5.0",
+    "code": "^3.0.2",
     "dockerode": "^2.2.2",
-    "lab": "^10.9.0",
+    "lab": "^11.0.1",
     "sinon-as-promised": "^4.0.0",
     "standard": "^7.1.2"
   }
