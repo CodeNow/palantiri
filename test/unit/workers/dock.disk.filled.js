@@ -67,7 +67,8 @@ describe('dock.exists-check.js unit test', () => {
       if (err) { return done(err) }
       sinon.assert.calledOnce(rabbitmq.publishTask)
       sinon.assert.calledWith(rabbitmq.publishTask, 'image.push', {
-        imageTag: testImage
+        imageTag: testImage,
+        host: testJob.host
       })
       done()
     })
@@ -103,10 +104,12 @@ describe('dock.exists-check.js unit test', () => {
       if (err) { return done(err) }
       sinon.assert.calledTwice(rabbitmq.publishTask)
       sinon.assert.calledWith(rabbitmq.publishTask, 'image.push', {
-        imageTag: testImage1
+        imageTag: testImage1,
+        host: testJob.host
       })
       sinon.assert.calledWith(rabbitmq.publishTask, 'image.push', {
-        imageTag: testImage2
+        imageTag: testImage2,
+        host: testJob.host
       })
       done()
     })
