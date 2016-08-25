@@ -31,6 +31,12 @@ that way each <service>-health-check can gather information on number of service
 
 ![Palantiri Jobs](https://docs.google.com/drawings/d/1X1MnxYyfomGopq8cu7K9NxcNahNGomFH9585l9B5H_E/pub?w=846&h=427)
 
+##### `dock.lost`
+
+Formerly known as `on-dock-unhealthy`. Event emitted by different services and palantiri itself.
+Indicates that dock was lost and we need to remove all references to it. Dock would be removed only after
+`dock.exists-check` passed.
+
 ##### `health-check`
 Creates jobs per each service which require a health check.
 Currently creates a docker-health-check job per docker host
