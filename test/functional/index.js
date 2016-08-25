@@ -24,7 +24,12 @@ const expect = Code.expect
 const it = lab.it
 
 const testPublisher = new Publisher({
-  events: ['user.whitelisted', 'dock.disk.filled']
+  events: [
+    'user.whitelisted',
+    'dock.disk.filled',
+    'dock.memory.exhausted',
+    'dock.unresponsive'
+  ]
 })
 describe('functional test', function () {
   var app

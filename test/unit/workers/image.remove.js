@@ -7,8 +7,7 @@ const sinon = require('sinon')
 
 const Docker = require('../../../lib/external/docker.js')
 const Helpers = require('../../../lib/workers/shared/helpers.js')
-const rabbitmq = require('../../../lib/external/rabbitmq.js')
-const Worker = require('../../../lib/workers/image.push.js').task
+const Worker = require('../../../lib/workers/image.remove.js').task
 
 require('sinon-as-promised')(Promise)
 const lab = exports.lab = Lab.script()
@@ -24,48 +23,44 @@ describe('dock.exists-check.js unit test', () => {
     host: '10.0.0.2:4242',
     imageTag: 'chill/fire:ice'
   }
-  const pushError = new Error('push on me')
+  const pushError = new Error('remove me')
 
   beforeEach((done) => {
     sinon.stub(Helpers, 'ensureDockExists').resolves()
     sinon.stub(Helpers, 'handleDockerError').rejects(pushError)
-    sinon.stub(Docker.prototype, 'pushImage')
-    sinon.stub(rabbitmq, 'publishTask')
+    sinon.stub(Docker.prototype, 'removeImage')
     done()
   })
 
   afterEach((done) => {
     Helpers.ensureDockExists.restore()
     Helpers.handleDockerError.restore()
-    Docker.prototype.pushImage.restore()
-    rabbitmq.publishTask.restore()
+    Docker.prototype.removeImage.restore()
     done()
   })
 
   it('should call in right order and right params', (done) => {
-    Docker.prototype.pushImage.resolves()
+    Docker.prototype.removeImage.resolves()
     Worker(testJob).asCallback((err) => {
       if (err) { return done(err) }
       sinon.assert.callOrder(
         Helpers.ensureDockExists,
-        Docker.prototype.pushImage,
-        rabbitmq.publishTask
+        Docker.prototype.removeImage
       )
       sinon.assert.calledWith(Helpers.ensureDockExists, testJob.host)
-      sinon.assert.calledWith(Docker.prototype.pushImage, testJob.imageTag)
-      sinon.assert.calledWith(rabbitmq.publishTask, 'image.remove', testJob)
+      sinon.assert.calledWith(Docker.prototype.removeImage, testJob.imageTag)
       done()
     })
   })
 
   it('should handle docker error', (done) => {
     const testError = new Error('red card')
-    Docker.prototype.pushImage.rejects(testError)
+    Docker.prototype.removeImage.rejects(testError)
     Worker(testJob).asCallback((err) => {
       expect(err).to.equal(pushError)
       sinon.assert.callOrder(
         Helpers.ensureDockExists,
-        Docker.prototype.pushImage,
+        Docker.prototype.removeImage,
         Helpers.handleDockerError
       )
       sinon.assert.calledWith(Helpers.handleDockerError, pushError)
