@@ -36,7 +36,7 @@
     "loadenv": "^2.2.0",
     "moment": "^2.14.1",
     "monitor-dog": "^1.4.1",
-    "ponos": "^5.1.0",
+    "ponos": "^5.6.1",
     "sinon": "^1.16.1",
     "string-to-stream": "^1.0.1"
   },

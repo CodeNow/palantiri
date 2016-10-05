@@ -53,13 +53,16 @@ describe('health-check.js unit test', function () {
       if (err) { return done(err) }
       sinon.assert.calledThrice(rabbitmq.publishTask)
       sinon.assert.calledWith(rabbitmq.publishTask, 'docker-health-check', {
-        dockerHost: 'http://host1'
+        dockerHost: 'http://host1',
+        githubOrgId: 11111
       })
       sinon.assert.calledWith(rabbitmq.publishTask, 'docker-health-check', {
-        dockerHost: 'http://host2'
+        dockerHost: 'http://host2',
+        githubOrgId: 2222
       })
       sinon.assert.calledWith(rabbitmq.publishTask, 'docker-health-check', {
-        dockerHost: 'http://host3'
+        dockerHost: 'http://host3',
+        githubOrgId: 3333
       })
       done()
     })
@@ -94,7 +97,7 @@ describe('health-check.js unit test', function () {
   })
 
   it('should cb err', function (done) {
-    var testErr = 'rock smash'
+    const testErr = 'rock smash'
     swarm.prototype.getHostsWithOrgs.rejects(testErr)
 
     HealthCheck(null).asCallback(function (err) {

@@ -84,9 +84,9 @@ describe('functional test', function () {
 
   describe('dock lost', function () {
     let stub
-    const orignialPublish = rabbitmq.publishTask
+    const orignialPublish = rabbitmq.publishEvent
     beforeEach(function (done) {
-      sinon.stub(rabbitmq, 'publishTask', (name, data) => {
+      sinon.stub(rabbitmq, 'publishEvent', (name, data) => {
         if (name === 'dock.lost') {
           return stub(data)
         }
@@ -96,7 +96,7 @@ describe('functional test', function () {
     })
 
     afterEach(function (done) {
-      rabbitmq.publishTask.restore()
+      rabbitmq.publishEvent.restore()
       app.stop().asCallback(done)
     })
 
@@ -122,7 +122,7 @@ describe('functional test', function () {
 describe('Unhealthy Test', function () {
   var app
   let stub
-  const orignialPublish = rabbitmq.publishTask
+  const orignialPublish = rabbitmq.publishEvent
   beforeEach(function (done) {
     process.env.COLLECT_INTERVAL = 100000
     process.env.RSS_LIMIT = 2000
@@ -132,7 +132,7 @@ describe('Unhealthy Test', function () {
     sinon.stub(ErrorCat, 'report')
     sinon.stub(Docker.prototype, 'pullImage').resolves(null)
     sinon.stub(swarm.prototype, 'getHostsWithOrgs')
-    sinon.stub(rabbitmq, 'publishTask', (name, data) => {
+    sinon.stub(rabbitmq, 'publishEvent', (name, data) => {
       if (name === 'dock.lost') {
         return stub(data)
       }
@@ -150,7 +150,7 @@ describe('Unhealthy Test', function () {
     Docker.prototype.startContainer.restore()
     Docker.prototype.containerLogs.restore()
     Docker.prototype.pullImage.restore()
-    rabbitmq.publishTask.restore()
+    rabbitmq.publishEvent.restore()
     ErrorCat.report.restore()
     app.stop().asCallback(done)
   })

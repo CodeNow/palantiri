@@ -24,7 +24,7 @@ describe('docker-health-check.js unit test', function () {
   const container = {
     id: 'docker-container-id-1'
   }
-  const testJob = { dockerHost: 'http://10.20.0.1' }
+  const testJob = { dockerHost: 'http://10.20.0.1', githubOrgId: 1111 }
   beforeEach(function (done) {
     process.env.RSS_LIMIT = 1
     sinon.stub(Docker.prototype, 'pullImage').resolves()
@@ -32,7 +32,7 @@ describe('docker-health-check.js unit test', function () {
     sinon.stub(Docker.prototype, 'startContainer').resolves()
     sinon.stub(Docker.prototype, 'containerLogs').resolves('{"id": "some-id"}')
     sinon.stub(Docker.prototype, 'removeContainer').resolves()
-    sinon.stub(rabbitmq, 'publishTask')
+    sinon.stub(rabbitmq, 'publishEvent')
     done()
   })
 
@@ -43,7 +43,7 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.startContainer.restore()
     Docker.prototype.containerLogs.restore()
     Docker.prototype.removeContainer.restore()
-    rabbitmq.publishTask.restore()
+    rabbitmq.publishEvent.restore()
     done()
   })
 
@@ -182,9 +182,10 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.containerLogs.resolves('{"error":"cannot allocate memory"}')
     DockerHealthCheck(testJob)
     .tap(function () {
-      sinon.assert.calledOnce(rabbitmq.publishTask)
-      sinon.assert.calledWith(rabbitmq.publishTask, 'dock.lost', {
-        host: 'http://10.20.0.1'
+      sinon.assert.calledOnce(rabbitmq.publishEvent)
+      sinon.assert.calledWith(rabbitmq.publishEvent, 'dock.lost', {
+        host: testJob.dockerHost,
+        githubOrgId: testJob.githubOrgId
       })
     })
     .asCallback(done)
@@ -194,7 +195,7 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.containerLogs.resolves('{"error":"some error"}')
     DockerHealthCheck(testJob)
     .tap(function () {
-      sinon.assert.notCalled(rabbitmq.publishTask)
+      sinon.assert.notCalled(rabbitmq.publishEvent)
     })
     .asCallback(done)
   })
@@ -203,9 +204,10 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 2}}')
     DockerHealthCheck(testJob)
     .tap(function () {
-      sinon.assert.calledOnce(rabbitmq.publishTask)
-      sinon.assert.calledWith(rabbitmq.publishTask, 'dock.lost', {
-        host: 'http://10.20.0.1'
+      sinon.assert.calledOnce(rabbitmq.publishEvent)
+      sinon.assert.calledWith(rabbitmq.publishEvent, 'dock.lost', {
+        host: testJob.dockerHost,
+        githubOrgId: testJob.githubOrgId
       })
     })
     .asCallback(done)
@@ -215,7 +217,7 @@ describe('docker-health-check.js unit test', function () {
     Docker.prototype.containerLogs.resolves('{"info":{"VmRSS": 0.8}}')
     DockerHealthCheck(testJob)
     .tap(function () {
-      sinon.assert.notCalled(rabbitmq.publishTask)
+      sinon.assert.notCalled(rabbitmq.publishEvent)
     })
     .asCallback(done)
   })

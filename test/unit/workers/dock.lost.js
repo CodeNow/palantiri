@@ -33,7 +33,8 @@ describe('dock.lost unit test', function () {
 
   it('should call publishTask for host', function (done) {
     const testJob = {
-      host: 'http://10.0.0.02:4242'
+      host: 'http://10.0.0.02:4242',
+      githubOrgId: 11111
     }
     rabbitmq.publishTask.returns()
 
