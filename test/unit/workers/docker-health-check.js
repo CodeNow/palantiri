@@ -24,7 +24,7 @@ describe('docker-health-check.js unit test', function () {
   const container = {
     id: 'docker-container-id-1'
   }
-  const testJob = { dockerHost: 'http://10.20.0.1' }
+  const testJob = { dockerHost: 'http://10.20.0.1', githubOrgId: 1111 }
   beforeEach(function (done) {
     process.env.RSS_LIMIT = 1
     sinon.stub(Docker.prototype, 'pullImage').resolves()
@@ -184,7 +184,8 @@ describe('docker-health-check.js unit test', function () {
     .tap(function () {
       sinon.assert.calledOnce(rabbitmq.publishEvent)
       sinon.assert.calledWith(rabbitmq.publishEvent, 'dock.lost', {
-        host: 'http://10.20.0.1'
+        host: testJob.dockerHost,
+        githubOrgId: testJob.githubOrgId
       })
     })
     .asCallback(done)
@@ -205,7 +206,8 @@ describe('docker-health-check.js unit test', function () {
     .tap(function () {
       sinon.assert.calledOnce(rabbitmq.publishEvent)
       sinon.assert.calledWith(rabbitmq.publishEvent, 'dock.lost', {
-        host: 'http://10.20.0.1'
+        host: testJob.dockerHost,
+        githubOrgId: testJob.githubOrgId
       })
     })
     .asCallback(done)
