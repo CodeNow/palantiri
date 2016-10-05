@@ -54,15 +54,15 @@ describe('health-check.js unit test', function () {
       sinon.assert.calledThrice(rabbitmq.publishTask)
       sinon.assert.calledWith(rabbitmq.publishTask, 'docker-health-check', {
         dockerHost: 'http://host1',
-        githubOrgId: '11111'
+        githubOrgId: 11111
       })
       sinon.assert.calledWith(rabbitmq.publishTask, 'docker-health-check', {
         dockerHost: 'http://host2',
-        githubOrgId: '2222'
+        githubOrgId: 2222
       })
       sinon.assert.calledWith(rabbitmq.publishTask, 'docker-health-check', {
         dockerHost: 'http://host3',
-        githubOrgId: '3333'
+        githubOrgId: 3333
       })
       done()
     })
