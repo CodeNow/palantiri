@@ -41,7 +41,9 @@ describe('dock.lost unit test', function () {
     DockLost(testJob).asCallback(function (err) {
       if (err) { done(err) }
       sinon.assert.calledOnce(rabbitmq.publishTask)
-      sinon.assert.calledWith(rabbitmq.publishTask, 'dock.exists-check', testJob)
+      sinon.assert.calledWith(rabbitmq.publishTask, 'dock.exists-check', {
+        host: testJob.host
+      })
       done()
     })
   })
