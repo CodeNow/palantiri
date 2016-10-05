@@ -19,7 +19,7 @@ const describe = lab.describe
 const expect = code.expect
 const it = lab.it
 
-describe('dock.exists-check.js unit test', () => {
+describe('image.push unit test', () => {
   const testJob = {
     host: '10.0.0.2:4242',
     imageTag: 'chill/fire:ice'

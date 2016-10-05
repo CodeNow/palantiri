@@ -23,7 +23,8 @@ const it = lab.it
 
 describe('dock.exists-check.js unit test', () => {
   const testJob = {
-    host: 'http://10.0.0.2:4242'
+    host: 'http://10.0.0.2:4242',
+    githubOrgId: 11111
   }
   beforeEach((done) => {
     process.env.RSS_LIMIT = 1
