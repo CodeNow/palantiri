@@ -126,8 +126,7 @@ describe('docker-health-check.js unit test', function () {
           type: 'docker-health-check'
         },
         Env: [
-          'LOOKUP_CMD=/docker',
-          'LOOKUP_ARGS=-d'
+          'LOOKUP_CMD=dockerd'
         ],
         HostConfig: {
           Privileged: true,
