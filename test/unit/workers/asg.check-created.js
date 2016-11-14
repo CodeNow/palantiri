@@ -42,8 +42,10 @@ describe('ASG Check Created Task', function () {
     it('should throw WorkerError when not enough time has passed ', function () {
       return assert.isRejected(CheckASGWasCreated({
         createdAt: Math.floor(new Date().getTime() / 1000) + 100,
-        githubId: 1232132,
-        orgName: 'asdasdasd'
+        organization: {
+          githubId: 1232132,
+          orgName: 'asdasdasd'
+        }
       }))
         .then(function (err) {
           assert.instanceOf(err, WorkerError)
@@ -68,15 +70,19 @@ describe('ASG Check Created Task', function () {
     it('should resolve successfully', function () {
       return CheckASGWasCreated({
         createdAt: Math.floor(new Date().getTime() / 1000) - 101,
-        githubId: orgWithDock,
-        orgName: 'asdasdasd'
+        organization: {
+          githubId: orgWithDock,
+          orgName: 'asdasdasd'
+        }
       })
     })
     it('should fire off a datadog when the org doesn\'t have a dock!', function () {
       return assert.isRejected(CheckASGWasCreated({
         createdAt: Math.floor(new Date().getTime() / 1000) - 101,
-        githubId: orgWithoutDock,
-        orgName: 'asdasdasd'
+        organization: {
+          githubId: orgWithoutDock,
+          orgName: 'asdasdasd'
+        }
       }))
         .then(function (err) {
           assert.instanceOf(err, WorkerError)
