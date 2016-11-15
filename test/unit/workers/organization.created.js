@@ -14,7 +14,7 @@ const sinon = require('sinon')
 const rabbitmq = require('../../../lib/external/rabbitmq')
 
 // internal (being tested)
-const UserWhitelisted = require('../../../lib/workers/user-whitelisted').task
+const OrganizationCreated = require('../../../lib/workers/organization.created').task
 
 require('sinon-as-promised')(require('bluebird'))
 
@@ -33,10 +33,12 @@ describe('User Whitelisted Task', function () {
     it('should resolve successfully', function () {
       let job = {
         createdAt: Math.floor(new Date().getTime() / 1000) - 101,
-        githubId: org,
-        orgName: 'asdasdasd'
+        organization: {
+          githubId: org,
+          orgName: 'asdasdasd'
+        }
       }
-      return UserWhitelisted(job)
+      return OrganizationCreated(job)
         .then(function () {
           sinon.assert.calledOnce(rabbitmq.publishTask)
           sinon.assert.calledWithExactly(
