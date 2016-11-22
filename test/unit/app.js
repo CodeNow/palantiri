@@ -38,8 +38,6 @@ describe('app.js unit test', function () {
     })
 
     it('should setup service', function (done) {
-      rabbitClient.publishTask.returns()
-
       app.start().asCallback(function (err) {
         expect(err).to.not.exist()
         sinon.assert.calledOnce(rabbitClient.connect)
@@ -55,9 +53,6 @@ describe('app.js unit test', function () {
       app.start().asCallback(function (err) {
         expect(err).to.exist()
         expect(rabbitClient.connect.called).to.be.true()
-        expect(rabbitClient.publishTask.called).to.be.false()
-        expect(app.interval).to.not.exist()
-
         done()
       })
     })
@@ -76,10 +71,11 @@ describe('app.js unit test', function () {
       done()
     })
 
-    it('should setup service', function (done) {
+    it('should stop service', function (done) {
       app.stop().asCallback(function (err) {
         expect(err).to.not.exist()
-        expect(app.interval).to.not.exist()
+        sinon.assert.calledOnce(rabbitClient.disconnect)
+        sinon.assert.calledOnce(workerServer.stop)
         done()
       })
     })
@@ -91,7 +87,6 @@ describe('app.js unit test', function () {
       app.stop().asCallback(function (err) {
         expect(err.message).to.equal(testErr.message)
         expect(rabbitClient.disconnect.called).to.be.true()
-        expect(app.interval).to.not.exist()
         done()
       })
     })
