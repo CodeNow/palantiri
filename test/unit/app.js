@@ -28,19 +28,12 @@ describe('app.js unit test', function () {
     beforeEach(function (done) {
       sinon.stub(rabbitClient, 'connect').resolves()
       sinon.stub(workerServer, 'start').resolves()
-      sinon.stub(rabbitClient, 'publishTask')
-      process.env.COLLECT_INTERVAL = 1
       done()
     })
 
     afterEach(function (done) {
       rabbitClient.connect.restore()
-      rabbitClient.publishTask.restore()
       workerServer.start.restore()
-      delete process.env.COLLECT_INTERVAL
-      if (app.interval) {
-        clearInterval(app.interval)
-      }
       done()
     })
 
@@ -49,13 +42,9 @@ describe('app.js unit test', function () {
 
       app.start().asCallback(function (err) {
         expect(err).to.not.exist()
-        expect(rabbitClient.connect.called).to.be.true()
-        expect(app.interval).to.exist()
-        setTimeout(function () {
-          expect(rabbitClient.publishTask.callCount)
-            .to.be.above(1)
-          done()
-        }, 10)
+        sinon.assert.calledOnce(rabbitClient.connect)
+        sinon.assert.calledOnce(workerServer.start)
+        done()
       })
     })
 
