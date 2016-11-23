@@ -28,34 +28,21 @@ describe('app.js unit test', function () {
     beforeEach(function (done) {
       sinon.stub(rabbitClient, 'connect').resolves()
       sinon.stub(workerServer, 'start').resolves()
-      sinon.stub(rabbitClient, 'publishTask')
-      process.env.COLLECT_INTERVAL = 1
       done()
     })
 
     afterEach(function (done) {
       rabbitClient.connect.restore()
-      rabbitClient.publishTask.restore()
       workerServer.start.restore()
-      delete process.env.COLLECT_INTERVAL
-      if (app.interval) {
-        clearInterval(app.interval)
-      }
       done()
     })
 
     it('should setup service', function (done) {
-      rabbitClient.publishTask.returns()
-
       app.start().asCallback(function (err) {
         expect(err).to.not.exist()
-        expect(rabbitClient.connect.called).to.be.true()
-        expect(app.interval).to.exist()
-        setTimeout(function () {
-          expect(rabbitClient.publishTask.callCount)
-            .to.be.above(1)
-          done()
-        }, 10)
+        sinon.assert.calledOnce(rabbitClient.connect)
+        sinon.assert.calledOnce(workerServer.start)
+        done()
       })
     })
 
@@ -66,9 +53,6 @@ describe('app.js unit test', function () {
       app.start().asCallback(function (err) {
         expect(err).to.exist()
         expect(rabbitClient.connect.called).to.be.true()
-        expect(rabbitClient.publishTask.called).to.be.false()
-        expect(app.interval).to.not.exist()
-
         done()
       })
     })
@@ -87,10 +71,11 @@ describe('app.js unit test', function () {
       done()
     })
 
-    it('should setup service', function (done) {
+    it('should stop service', function (done) {
       app.stop().asCallback(function (err) {
         expect(err).to.not.exist()
-        expect(app.interval).to.not.exist()
+        sinon.assert.calledOnce(rabbitClient.disconnect)
+        sinon.assert.calledOnce(workerServer.stop)
         done()
       })
     })
@@ -102,7 +87,6 @@ describe('app.js unit test', function () {
       app.stop().asCallback(function (err) {
         expect(err.message).to.equal(testErr.message)
         expect(rabbitClient.disconnect.called).to.be.true()
-        expect(app.interval).to.not.exist()
         done()
       })
     })
