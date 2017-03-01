@@ -21,6 +21,7 @@ require('sinon-as-promised')(require('bluebird'))
 describe('User Whitelisted Task', function () {
   describe('Successful runs', function () {
     var org = 13801594
+
     beforeEach(function (done) {
       sinon.stub(rabbitmq, 'publishTask').returns()
       done()
@@ -39,14 +40,29 @@ describe('User Whitelisted Task', function () {
         }
       }
       return OrganizationCreated(job)
-        .then(function () {
-          sinon.assert.calledOnce(rabbitmq.publishTask)
-          sinon.assert.calledWithExactly(
-            rabbitmq.publishTask,
-            'asg.check-created',
-            job
-          )
-        })
+      .then(function () {
+        sinon.assert.calledOnce(rabbitmq.publishTask)
+        sinon.assert.calledWithExactly(
+          rabbitmq.publishTask,
+          'asg.check-created',
+          job
+        )
+      })
+    })
+
+    it('should not call publish if personal account', function () {
+      let job = {
+        createdAt: Math.floor(new Date().getTime() / 1000) - 101,
+        organization: {
+          githubId: org,
+          orgName: 'asdasdasd',
+          isPersonalAccount: true
+        }
+      }
+      return OrganizationCreated(job)
+      .then(function () {
+        sinon.assert.notCalled(rabbitmq.publishTask)
+      })
     })
   })
 })
