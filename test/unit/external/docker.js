@@ -47,6 +47,30 @@ describe('docker.js unit test', function () {
     })
   }) // end listImages
 
+  describe('listDanglingVolumes', function () {
+    beforeEach(function (done) {
+      sinon.stub(docker, 'listVolumesAsync')
+      done()
+    })
+
+    afterEach(function (done) {
+      docker.listVolumesAsync.restore()
+      done()
+    })
+
+    it('should call list images', function (done) {
+      docker.listVolumesAsync.returns(Promise.resolve())
+      docker.listDanglingVolumes().asCallback((err) => {
+        if (err) { return done(err) }
+        sinon.assert.calledOnce(docker.listVolumesAsync)
+        sinon.assert.calledWith(docker.listVolumesAsync, {
+          dangling: true
+        })
+        done()
+      })
+    })
+  })
+
   describe('removeImage', function () {
     let removeStub
     beforeEach(function (done) {
