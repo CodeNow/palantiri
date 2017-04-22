@@ -153,8 +153,8 @@ describe('dock.disk.filled.js unit test', () => {
         sinon.assert.calledOnce(rabbitmq.publishTask)
         sinon.assert.calledWith(
           rabbitmq.publishTask,
-          'instance.volumes.delete',
-          { volume }
+          'volume.delete',
+          { volume, host: testJob.host }
         )
         done()
       })

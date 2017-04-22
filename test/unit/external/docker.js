@@ -71,6 +71,34 @@ describe('docker.js unit test', function () {
     })
   })
 
+  describe('removeVolume', function () {
+    let removeStub
+    beforeEach(function (done) {
+      removeStub = {
+        remove: sinon.stub().yieldsAsync()
+      }
+      sinon.stub(docker.client, 'getVolume').returns(removeStub)
+      done()
+    })
+
+    afterEach(function (done) {
+      docker.client.getVolume.restore()
+      done()
+    })
+
+    it('should call remove', function (done) {
+      const testName = 'registry.runnable.com/runnable/eru:v6.0.1'
+      docker.removeVolume(testName).asCallback((err) => {
+        if (err) { return done(err) }
+        sinon.assert.calledOnce(docker.client.getVolume)
+        sinon.assert.calledWith(docker.client.getVolume, testName)
+        sinon.assert.calledOnce(removeStub.remove)
+        sinon.assert.calledWith(removeStub.remove, sinon.match.func)
+        done()
+      })
+    })
+  })
+
   describe('removeImage', function () {
     let removeStub
     beforeEach(function (done) {
