@@ -26,14 +26,12 @@ describe('image.remove unit test', () => {
   const pushError = new Error('remove me')
 
   beforeEach((done) => {
-    sinon.stub(Helpers, 'ensureDockExists').resolves()
     sinon.stub(Helpers, 'handleDockerError').rejects(pushError)
     sinon.stub(Docker.prototype, 'removeImage')
     done()
   })
 
   afterEach((done) => {
-    Helpers.ensureDockExists.restore()
     Helpers.handleDockerError.restore()
     Docker.prototype.removeImage.restore()
     done()
@@ -44,10 +42,8 @@ describe('image.remove unit test', () => {
     Worker(testJob).asCallback((err) => {
       if (err) { return done(err) }
       sinon.assert.callOrder(
-        Helpers.ensureDockExists,
         Docker.prototype.removeImage
       )
-      sinon.assert.calledWith(Helpers.ensureDockExists, testJob.host)
       sinon.assert.calledWith(Docker.prototype.removeImage, testJob.imageTag)
       done()
     })
@@ -59,7 +55,6 @@ describe('image.remove unit test', () => {
     Worker(testJob).asCallback((err) => {
       expect(err).to.equal(pushError)
       sinon.assert.callOrder(
-        Helpers.ensureDockExists,
         Docker.prototype.removeImage,
         Helpers.handleDockerError
       )
