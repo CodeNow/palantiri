@@ -36,7 +36,7 @@ describe('dock.disk.filled.js unit test', () => {
   describe('volumes', () => {
     it('should publish a job for each dangling volume returned', done => {
       const volume = { name: 'asdasdas' }
-      Docker.prototype.listDanglingVolumes.resolves([volume])
+      Docker.prototype.listDanglingVolumes.resolves({ Volumes: [volume] })
 
       Worker(testJob).asCallback(err => {
         if (err) { return done(err) }
