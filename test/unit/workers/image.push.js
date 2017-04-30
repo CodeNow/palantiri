@@ -8,7 +8,7 @@ const sinon = require('sinon')
 const Docker = require('../../../lib/external/docker.js')
 const Helpers = require('../../../lib/workers/shared/helpers.js')
 const rabbitmq = require('../../../lib/external/rabbitmq.js')
-const Worker = require('../../../lib/workers/image.push.js').task
+const Worker = require('../../../lib/workers/dock.image.push.js').task
 
 require('sinon-as-promised')(Promise)
 const lab = exports.lab = Lab.script()
@@ -19,7 +19,7 @@ const describe = lab.describe
 const expect = code.expect
 const it = lab.it
 
-describe('image.push unit test', () => {
+describe('dock.image.push unit test', () => {
   const testJob = {
     host: '10.0.0.2:4242',
     imageTag: 'chill/fire:ice'
@@ -53,7 +53,7 @@ describe('image.push unit test', () => {
       )
       sinon.assert.calledWith(Helpers.ensureDockExists, testJob.host)
       sinon.assert.calledWith(Docker.prototype.pushImage, testJob.imageTag)
-      sinon.assert.calledWith(rabbitmq.publishTask, 'image.remove', testJob)
+      sinon.assert.calledWith(rabbitmq.publishTask, 'dock.image.remove', testJob)
       done()
     })
   })

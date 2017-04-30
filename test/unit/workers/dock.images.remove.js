@@ -60,7 +60,7 @@ describe('dock.images.remove.js unit test', () => {
       Worker(testJob).asCallback(err => {
         if (err) { return done(err) }
         sinon.assert.calledOnce(rabbitmq.publishTask)
-        sinon.assert.calledWith(rabbitmq.publishTask, 'image.remove', {
+        sinon.assert.calledWith(rabbitmq.publishTask, 'dock.image.remove', {
           imageTag: testImageId,
           host: testJob.host
         })
@@ -76,7 +76,7 @@ describe('dock.images.remove.js unit test', () => {
       Worker(testJob).asCallback(err => {
         if (err) { return done(err) }
         sinon.assert.calledOnce(rabbitmq.publishTask)
-        sinon.assert.calledWith(rabbitmq.publishTask, 'image.remove', {
+        sinon.assert.calledWith(rabbitmq.publishTask, 'dock.image.remove', {
           imageTag: testImageId,
           host: testJob.host
         })
@@ -93,7 +93,7 @@ describe('dock.images.remove.js unit test', () => {
       Worker(testJob).asCallback(err => {
         if (err) { return done(err) }
         sinon.assert.calledOnce(rabbitmq.publishTask)
-        sinon.assert.calledWith(rabbitmq.publishTask, 'image.push', {
+        sinon.assert.calledWith(rabbitmq.publishTask, 'dock.image.push', {
           imageTag: testImage,
           host: testJob.host
         })
@@ -117,15 +117,15 @@ describe('dock.images.remove.js unit test', () => {
       Worker(testJob).asCallback(err => {
         if (err) { return done(err) }
         sinon.assert.calledThrice(rabbitmq.publishTask)
-        sinon.assert.calledWith(rabbitmq.publishTask, 'image.push', {
+        sinon.assert.calledWith(rabbitmq.publishTask, 'dock.image.push', {
           imageTag: testImage1,
           host: testJob.host
         })
-        sinon.assert.calledWith(rabbitmq.publishTask, 'image.push', {
+        sinon.assert.calledWith(rabbitmq.publishTask, 'dock.image.push', {
           imageTag: testImage2,
           host: testJob.host
         })
-        sinon.assert.calledWith(rabbitmq.publishTask, 'image.remove', {
+        sinon.assert.calledWith(rabbitmq.publishTask, 'dock.image.remove', {
           imageTag: testImageId,
           host: testJob.host
         })
@@ -142,7 +142,7 @@ describe('dock.images.remove.js unit test', () => {
       Worker(testJob).asCallback(err => {
         if (err) { return done(err) }
         sinon.assert.calledOnce(rabbitmq.publishTask)
-        sinon.assert.calledWith(rabbitmq.publishTask, 'image.remove', {
+        sinon.assert.calledWith(rabbitmq.publishTask, 'dock.image.remove', {
           imageTag: testId,
           host: testJob.host
         })

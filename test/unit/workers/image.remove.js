@@ -7,7 +7,7 @@ const sinon = require('sinon')
 
 const Docker = require('../../../lib/external/docker.js')
 const Helpers = require('../../../lib/workers/shared/helpers.js')
-const Worker = require('../../../lib/workers/image.remove.js').task
+const Worker = require('../../../lib/workers/dock.image.remove.js').task
 
 require('sinon-as-promised')(Promise)
 const lab = exports.lab = Lab.script()
@@ -18,7 +18,7 @@ const describe = lab.describe
 const expect = code.expect
 const it = lab.it
 
-describe('image.remove unit test', () => {
+describe('dock.image.remove unit test', () => {
   const testJob = {
     host: '10.0.0.2:4242',
     imageTag: 'chill/fire:ice'
