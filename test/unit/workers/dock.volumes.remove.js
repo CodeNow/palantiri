@@ -4,9 +4,9 @@ const Lab = require('lab')
 const Promise = require('bluebird')
 const sinon = require('sinon')
 
-const Helpers = require('../../../lib/workers/shared/helpers.js')
+const Docker = require('../../../lib/external/docker.js')
 const rabbitmq = require('../../../lib/external/rabbitmq.js')
-const Worker = require('../../../lib/workers/dock.disk.filled.js').task
+const Worker = require('../../../lib/workers/dock.volumes.remove.js').task
 
 require('sinon-as-promised')(Promise)
 const lab = exports.lab = Lab.script()
@@ -22,27 +22,30 @@ describe('dock.disk.filled.js unit test', () => {
   }
 
   beforeEach(done => {
-    sinon.stub(Helpers, 'ensureDockExists').resolves()
+    sinon.stub(Docker.prototype, 'listDanglingVolumes')
     sinon.stub(rabbitmq, 'publishTask')
     done()
   })
 
   afterEach(done => {
-    Helpers.ensureDockExists.restore()
+    Docker.prototype.listDanglingVolumes.restore()
     rabbitmq.publishTask.restore()
     done()
   })
-  describe('images', () => {
-    beforeEach(done => {
-      done()
-    })
 
-    it('should publish cleanup tasks', done => {
+  describe('volumes', () => {
+    it('should publish a job for each dangling volume returned', done => {
+      const volume = { name: 'asdasdas' }
+      Docker.prototype.listDanglingVolumes.resolves([volume])
+
       Worker(testJob).asCallback(err => {
         if (err) { return done(err) }
-        sinon.assert.calledTwice(rabbitmq.publishTask)
-        sinon.assert.calledWith(rabbitmq.publishTask, 'dock.images.remove', testJob)
-        sinon.assert.calledWith(rabbitmq.publishTask, 'dock.volumes.remove', testJob)
+        sinon.assert.calledOnce(rabbitmq.publishTask)
+        sinon.assert.calledWith(
+          rabbitmq.publishTask,
+          'volume.delete',
+          { volume, host: testJob.host }
+        )
         done()
       })
     })
