@@ -18,7 +18,7 @@ const it = lab.it
 
 describe('dock.volume.remove unit test', () => {
   const testJob = {
-    volume: { name: 'asdasdsada' },
+    volume: { Name: 'asdasdsada' },
     host: '10.0.0.2:4242'
   }
 
@@ -39,7 +39,7 @@ describe('dock.volume.remove unit test', () => {
   it('should call delete volume with the volume.name', () => {
     return Worker(testJob)
       .then(() => {
-        sinon.assert.calledWith(Docker.prototype.removeVolume, testJob.volume.name)
+        sinon.assert.calledWith(Docker.prototype.removeVolume, testJob.volume.Name)
       })
   })
 })
